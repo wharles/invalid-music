@@ -23,6 +23,8 @@ public abstract class HttpClientService {
 
     private static final String FORM = "application/x-www-form-urlencoded";
 
+    private static final String JSON = "application/json;charset=UTF-8";
+
     private static final String GZIP = "application/gzip";
 
     private final HttpClient httpClient;
@@ -55,22 +57,39 @@ public abstract class HttpClientService {
     public abstract String getUserAgent();
 
     /**
-     * 抽象方法，POST使用json作为body场景使用
+     * POST使用form作为body场景使用
      *
      * @param url    请求的URL
-     * @param params json格式参数
+     * @param params form格式参数
      * @return 返回的json内容
      * @throws IOException              json操作IO异常
      * @throws GeneralSecurityException 常用加密操作异常
      * @throws InterruptedException     运行中断异常
      */
-    public String post(String url, String params) throws IOException, GeneralSecurityException, InterruptedException {
+    public String postForm(String url, String params) throws IOException, GeneralSecurityException, InterruptedException {
+        return post(url, params, FORM);
+    }
+
+    /**
+     * POST使用json作为body场景使用
+     *
+     * @param url    请求的URL
+     * @param params json格式参数
+     * @return 返回的json内容
+     * @throws IOException          json操作IO异常
+     * @throws InterruptedException 运行中断异常
+     */
+    public String postJson(String url, String params) throws IOException, InterruptedException {
+        return post(url, params, JSON);
+    }
+
+    private String post(String url, String params, String contentType) throws IOException, InterruptedException {
         var requestBody = HttpRequest.BodyPublishers.ofString(params);
         var postRequest = HttpRequest.newBuilder()
                 .header("Referer", getReferer())
                 .header("Cookie", getCookie())
                 .header("User-Agent", getUserAgent())
-                .header("Content-Type", FORM)
+                .header("Content-Type", contentType)
                 .header("Accept-Encoding", GZIP)
                 .POST(requestBody).uri(URI.create(url)).build();
         var response = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));

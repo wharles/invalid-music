@@ -44,11 +44,11 @@ public class NeteaseClientService extends HttpClientService {
     }
 
     @Override
-    public String post(String url, String json) throws IOException, GeneralSecurityException, InterruptedException {
+    public String postForm(String url, String json) throws IOException, GeneralSecurityException, InterruptedException {
         String params = EncryptionUtil.encrypt(json, EncryptionUtil.NONCE);
         params = EncryptionUtil.encrypt(params, EncryptionUtil.SECRET_KEY);
 
         var parameters = Map.of("params", params, "encSecKey", EncryptionUtil.ENC_SEC_KEY);
-        return super.post(url, buildHttpQuery(parameters));
+        return super.postForm(url, buildHttpQuery(parameters));
     }
 }

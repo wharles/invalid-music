@@ -144,7 +144,7 @@ public class NeteaseMusicApi implements MusicApi {
 
     private JsonNode requestJson(String url, ObjectNode objectNode) throws IOException, GeneralSecurityException, InterruptedException {
         String params = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        String content = httpClientService.post(url, params);
+        String content = httpClientService.postForm(url, params);
         if (StringUtils.isEmpty(content)) {
             return null;
         }
