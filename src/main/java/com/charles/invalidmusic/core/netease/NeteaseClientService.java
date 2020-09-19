@@ -2,12 +2,12 @@ package com.charles.invalidmusic.core.netease;
 
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.netease.util.EncryptionUtil;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.security.GeneralSecurityException;
+import java.util.Map;
 
 /**
  * NeteaseClientService
@@ -24,8 +24,8 @@ public class NeteaseClientService extends HttpClientService {
 
     private static final String REFERER = "http://music.163.com/";
 
-    public NeteaseClientService(OkHttpClient okHttpClient) {
-        super(okHttpClient);
+    public NeteaseClientService(HttpClient httpClient) {
+        super(httpClient);
     }
 
     @Override
@@ -44,13 +44,11 @@ public class NeteaseClientService extends HttpClientService {
     }
 
     @Override
-    public String request(String url, String json) throws IOException, GeneralSecurityException {
+    public String post(String url, String json) throws IOException, GeneralSecurityException, InterruptedException {
         String params = EncryptionUtil.encrypt(json, EncryptionUtil.NONCE);
         params = EncryptionUtil.encrypt(params, EncryptionUtil.SECRET_KEY);
-        FormBody formBody = new FormBody.Builder()
-                .add("params", params)
-                .add("encSecKey", EncryptionUtil.ENC_SEC_KEY)
-                .build();
-        return request(url, formBody);
+
+        var parameters = Map.of("params", params, "encSecKey", EncryptionUtil.ENC_SEC_KEY);
+        return super.post(url, buildHttpQuery(parameters));
     }
 }

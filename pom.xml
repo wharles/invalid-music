@@ -12,7 +12,7 @@
 	<artifactId>invalid-musicApi</artifactId>
 	<version>1.0.1-SNAPSHOT</version>
 	<name>invalid-musicApi</name>
-	<description>An invalid musicApi site</description>
+	<description>An invalid musicApi website</description>
 
 	<properties>
 		<java.version>11</java.version>
@@ -63,11 +63,6 @@
 					<artifactId>junit-vintage-engine</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>okhttp</artifactId>
-			<version>3.13.1</version>
 		</dependency>
 		<dependency>
 			<groupId>io.springfox</groupId>

@@ -1,8 +1,9 @@
 package com.charles.invalidmusic.core.tencent;
 
 import com.charles.invalidmusic.core.base.HttpClientService;
-import okhttp3.OkHttpClient;
 import org.springframework.stereotype.Component;
+
+import java.net.http.HttpClient;
 
 /**
  * TencentHttpClientService
@@ -19,8 +20,8 @@ public class TencentClientService extends HttpClientService {
 
     private static final String REFERER = "http://y.qq.com";
 
-    public TencentClientService(OkHttpClient okHttpClient) {
-        super(okHttpClient);
+    public TencentClientService(HttpClient httpClient) {
+        super(httpClient);
     }
 
     @Override

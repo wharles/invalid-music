@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import okhttp3.HttpUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,14 +34,14 @@ public class TencentMusicApi implements MusicApi {
         this.jsonBeanService = jsonBeanService;
     }
 
-    private static final Map<String, String> bitMap = new HashMap<>() {{
-        put("M800", "size_320mp3");
-        put("C600", "size_192aac");
-        put("M500", "size_128mp3");
-        put("C400", "size_96aac");
-        put("C200", "size_48aac");
-        put("C100", "size_24aac");
-    }};
+    private static final Map<String, String> bitMap = Map.of(
+            "M800", "size_320mp3",
+            "C600", "size_192aac",
+            "M500", "size_128mp3",
+            "C400", "size_96aac",
+            "C200", "size_48aac",
+            "C100", "size_24aac"
+    );
 
     @Override
     public Platform getPlatform() {
@@ -52,23 +51,24 @@ public class TencentMusicApi implements MusicApi {
     @Override
     public PageList<SearchItem> search(String keyword, int limit, int page, int type) {
         String url = "https://c.y.qq.com/soso/fcgi-bin/client_search_cp";
-        HttpUrl.Builder httpBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
-        httpBuilder.addQueryParameter("format", "json")
-                .addQueryParameter("type", String.valueOf(type))
-                .addQueryParameter("n", String.valueOf(limit))
-                .addQueryParameter("w", keyword)
-                .addQueryParameter("p", String.valueOf(page))
-                .addQueryParameter("new_json", "1")
-                .addQueryParameter("cr", "1")
-                .addQueryParameter("lossless", "1")
-                .addQueryParameter("aggr", "1");
+        var params = Map.of(
+                "format", "json",
+                "type", String.valueOf(type),
+                "n", String.valueOf(limit),
+                "w", keyword,
+                "p", String.valueOf(page),
+                "new_json", "1",
+                "cr", "1",
+                "lossless", "1",
+                "aggr", "1"
+        );
         try {
-            String content = httpClientService.request(httpBuilder.build());
+            String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return jsonBeanService.getSearchItemPageList(limit, page, resultModel.path("data").path("song"));
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("search music failed, reason:", e);
         }
         return jsonBeanService.getSearchItemPageList(limit, page, null);
@@ -77,12 +77,13 @@ public class TencentMusicApi implements MusicApi {
     @Override
     public Song getSongById(String songId) {
         String url = "https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg";
-        HttpUrl.Builder httpBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
-        httpBuilder.addQueryParameter("songmid", String.valueOf(songId))
-                .addQueryParameter("platform", "yqq")
-                .addQueryParameter("format", "json");
+        var params = Map.of(
+                "songmid", String.valueOf(songId),
+                "platform", "yqq",
+                "format", "json"
+        );
         try {
-            String content = httpClientService.request(httpBuilder.build());
+            String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 JsonNode songNode = resultModel.path("data").get(0);
@@ -90,7 +91,7 @@ public class TencentMusicApi implements MusicApi {
                 setFileSize(urlInfo, songNode);
                 return jsonBeanService.getSong(songNode, urlInfo);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("get song by id failed, reason:", e);
         }
         return null;
@@ -99,18 +100,19 @@ public class TencentMusicApi implements MusicApi {
     @Override
     public Playlist getPlaylistById(String playlistId) {
         String url = "https://c.y.qq.com/v8/fcg-bin/fcg_v8_playlist_cp.fcg";
-        HttpUrl.Builder httpBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
-        httpBuilder.addQueryParameter("id", playlistId)
-                .addQueryParameter("platform", "jqspaframe.json")
-                .addQueryParameter("format", "json")
-                .addQueryParameter("newsong", "1");
+        var params = Map.of(
+                "id", playlistId,
+                "platform", "jqspaframe.json",
+                "format", "json",
+                "newsong", "1"
+        );
         try {
-            String content = httpClientService.request(httpBuilder.build());
+            String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return jsonBeanService.getPlaylist(resultModel.path("data").path("cdlist").get(0));
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("get song by id failed, reason:", e);
         }
         return null;
@@ -122,19 +124,19 @@ public class TencentMusicApi implements MusicApi {
             String url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
             String dataJson = getDataJson(songId);
 
-            HttpUrl.Builder httpBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
-            httpBuilder.addQueryParameter("platform", "yqq.json")
-                    .addQueryParameter("format", "json")
-                    .addQueryParameter("needNewCode", "0")
-                    .addQueryParameter("data", dataJson);
-
-            String content = httpClientService.request(httpBuilder.build());
+            var params = Map.of(
+                    "platform", "yqq.json",
+                    "format", "json",
+                    "needNewCode", "0",
+                    "data", dataJson
+            );
+            String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 JsonNode dataNode = resultModel.path("req_0").path("data");
                 return jsonBeanService.getUrlInfo(bitrate, dataNode);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("get url by song id failed, reason:", e);
         }
         return null;
@@ -143,17 +145,18 @@ public class TencentMusicApi implements MusicApi {
     @Override
     public Lyric getLyricById(String songId) {
         String url = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg";
-        HttpUrl.Builder httpBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
-        httpBuilder.addQueryParameter("songmid", String.valueOf(songId))
-                .addQueryParameter("g_tk", "5381")
-                .addQueryParameter("format", "json");
+        var params = Map.of(
+                "songmid", String.valueOf(songId),
+                "g_tk", "5381",
+                "format", "json"
+        );
         try {
-            String content = httpClientService.request(httpBuilder.build());
+            String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return jsonBeanService.getLyric(resultModel);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error("get lyric by song id failed, reason:", e);
         }
         return null;

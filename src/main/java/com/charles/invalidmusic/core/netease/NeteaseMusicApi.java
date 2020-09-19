@@ -62,7 +62,7 @@ public class NeteaseMusicApi implements MusicApi {
             if (resultModel != null) {
                 return jsonBeanService.getSearchItemPageList(limit, page, resultModel);
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("search music failed, reason:", e);
         }
         return jsonBeanService.getSearchItemPageList(limit, page, null);
@@ -79,7 +79,7 @@ public class NeteaseMusicApi implements MusicApi {
                 UrlInfo urlInfo = getUrlById(999000, songId);
                 return jsonBeanService.getSong(resultModel.path("songs").get(0), urlInfo);
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get music by id failed, reason:", e);
         }
         return null;
@@ -97,7 +97,7 @@ public class NeteaseMusicApi implements MusicApi {
             if (resultModel != null) {
                 return jsonBeanService.getPlaylist(resultModel);
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get playlist by id failed, reason:", e);
         }
         return null;
@@ -115,7 +115,7 @@ public class NeteaseMusicApi implements MusicApi {
             if (resultModel != null) {
                 return jsonBeanService.getUrlInfo(bitrate, resultModel);
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get url by id failed, reason:", e);
         }
         return null;
@@ -136,15 +136,15 @@ public class NeteaseMusicApi implements MusicApi {
             if (resultModel != null) {
                 return jsonBeanService.getLyric(resultModel);
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get lyric by id failed, reason:", e);
         }
         return null;
     }
 
-    private JsonNode requestJson(String url, ObjectNode objectNode) throws IOException, GeneralSecurityException {
+    private JsonNode requestJson(String url, ObjectNode objectNode) throws IOException, GeneralSecurityException, InterruptedException {
         String params = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        String content = httpClientService.request(url, params);
+        String content = httpClientService.post(url, params);
         if (StringUtils.isEmpty(content)) {
             return null;
         }

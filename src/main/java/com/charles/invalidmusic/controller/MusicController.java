@@ -131,7 +131,7 @@ public class MusicController {
     @ApiOperation("根据播放列表ID查询播放列表接口")
     @ResponseBody
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "songId", value = "播放列表ID", required = true),
+            @ApiImplicitParam(name = "playlistId", value = "播放列表ID", required = true),
             @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease")
     })
     @RequestMapping(value = "/playlist/{playlistId}", method = RequestMethod.GET)

@@ -1,10 +1,17 @@
 package com.charles.invalidmusic.core.base;
 
-import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * OkHttpClientService
@@ -14,13 +21,16 @@ import java.security.GeneralSecurityException;
  */
 public abstract class HttpClientService {
 
-    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private static final String FORM = "application/x-www-form-urlencoded";
 
-    private final OkHttpClient okHttpClient;
+    private static final String GZIP = "application/gzip";
+
+    private final HttpClient httpClient;
+
 
     @Autowired
-    public HttpClientService(OkHttpClient okHttpClient) {
-        this.okHttpClient = okHttpClient;
+    public HttpClientService(HttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     /**
@@ -52,9 +62,35 @@ public abstract class HttpClientService {
      * @return 返回的json内容
      * @throws IOException              json操作IO异常
      * @throws GeneralSecurityException 常用加密操作异常
+     * @throws InterruptedException     运行中断异常
      */
-    public String request(String url, String params) throws IOException, GeneralSecurityException {
-        return request(url, RequestBody.create(JSON, params));
+    public String post(String url, String params) throws IOException, GeneralSecurityException, InterruptedException {
+        var requestBody = HttpRequest.BodyPublishers.ofString(params);
+        var postRequest = HttpRequest.newBuilder()
+                .header("Referer", getReferer())
+                .header("Cookie", getCookie())
+                .header("User-Agent", getUserAgent())
+                .header("Content-Type", FORM)
+                .header("Accept-Encoding", GZIP)
+                .POST(requestBody).uri(URI.create(url)).build();
+        var response = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() / 10 == 20 && response.body() != null) {
+            return response.body();
+        }
+
+        return null;
+    }
+
+    /**
+     * 构建请求参数
+     *
+     * @param params 参数map
+     * @return 参数字符串
+     */
+    protected String buildHttpQuery(Map<String, String> params) {
+        return params.keySet().stream()
+                .map(key -> key + "=" + URLEncoder.encode(params.get(key), StandardCharsets.UTF_8))
+                .collect(Collectors.joining("&"));
     }
 
     /**
@@ -62,43 +98,35 @@ public abstract class HttpClientService {
      *
      * @param url HttpUrl
      * @return 返回body字符串
-     * @throws IOException IO异常
+     * @throws IOException          IO异常
+     * @throws InterruptedException 运行中断异常
      */
-    public String request(HttpUrl url) throws IOException {
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Referer", getReferer())
-                .addHeader("Cookie", getCookie())
+    public String get(String url) throws IOException, InterruptedException {
+        var request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(url))
+                .header("Referer", getReferer())
+                .header("Cookie", getCookie())
                 .header("User-Agent", getUserAgent())
-                .get()
                 .build();
-        Response response = okHttpClient.newCall(request).execute();
-        if (response.isSuccessful() && response.body() != null) {
-            return response.body().string();
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (response.statusCode() / 10 == 20 && response.body() != null) {
+            return response.body();
         }
         return null;
     }
 
     /**
-     * POST 请求
+     * GET 请求
      *
-     * @param url    API URL
-     * @param params POST请求参数
-     * @return 返回json字符串
-     * @throws IOException IO异常
+     * @param params map格式请求参数
+     * @param url    HttpUrl
+     * @return 返回body字符串
+     * @throws IOException          IO异常
+     * @throws InterruptedException 运行中断异常
      */
-    public String request(String url, RequestBody params) throws IOException {
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("Referer", getReferer())
-                .addHeader("Cookie", getCookie())
-                .header("User-Agent", getUserAgent())
-                .post(params)
-                .build();
-        Response response = okHttpClient.newCall(request).execute();
-        if (response.isSuccessful() && response.body() != null) {
-            return response.body().string();
-        }
-        return null;
+    public String get(String url, Map<String, String> params) throws IOException, InterruptedException {
+        var urlWithParams = url + "?" + buildHttpQuery(params);
+        return this.get(urlWithParams);
     }
 }

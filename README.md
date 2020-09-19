@@ -19,7 +19,7 @@ Invalid Music: 音乐API合集Java版，感谢 <a href="https://github.com/metow
 
 ## 依赖
 
-JDK 8+
+JDK 11+
 
 ## 快速开始
 
@@ -35,7 +35,7 @@ git clone https://github.com/charles-wxg/invalid-music.git
 
 ## 环境
 
-- 运行环境: JDK 8+    
+- 运行环境: JDK 11+    
 - 开发环境: Intellij IDEA 2019
 
 ## 相关项目

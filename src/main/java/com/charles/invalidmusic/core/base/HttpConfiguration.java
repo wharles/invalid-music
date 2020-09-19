@@ -1,29 +1,27 @@
 package com.charles.invalidmusic.core.base;
 
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.net.http.HttpClient;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
- * OkHttpConfiguration
+ * HttpConfiguration
  *
  * @author charleswang
  * @since 2020/9/12 6:05 下午
  */
 @Configuration
-public class OkHttpConfiguration {
+public class HttpConfiguration {
     @Bean
     public X509TrustManager x509TrustManager() {
         return new X509TrustManager() {
@@ -43,36 +41,28 @@ public class OkHttpConfiguration {
     }
 
     @Bean
-    public SSLSocketFactory sslSocketFactory() {
+    public SSLContext trustAllCertsContext() {
         try {
             //信任任何链接
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[]{x509TrustManager()}, new SecureRandom());
-            return sslContext.getSocketFactory();
+            return sslContext;
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    @Bean
-    public ConnectionPool pool() {
-        return new ConnectionPool(200, 5, TimeUnit.MINUTES);
-    }
-
     /**
      * 信任SSL证书
      */
     @Bean
-    public OkHttpClient okHttpClient() {
-        return new OkHttpClient.Builder()
-                .sslSocketFactory(sslSocketFactory(), x509TrustManager())
-                .retryOnConnectionFailure(false)
-                .connectionPool(pool())
-                .hostnameVerifier((hostname, session) -> true)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+    public HttpClient httpClient() {
+        return HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofSeconds(30))
+                .followRedirects(HttpClient.Redirect.ALWAYS)
+                .sslContext(trustAllCertsContext())
                 .build();
     }
 }
