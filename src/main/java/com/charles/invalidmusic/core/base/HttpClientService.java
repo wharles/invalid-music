@@ -36,25 +36,11 @@ public abstract class HttpClientService {
     }
 
     /**
-     * Referer
+     * 获取请求头
      *
-     * @return Referer
+     * @return 请求头数组
      */
-    public abstract String getReferer();
-
-    /**
-     * Cookie
-     *
-     * @return Cookie
-     */
-    public abstract String getCookie();
-
-    /**
-     * UserAgent
-     *
-     * @return UserAgent
-     */
-    public abstract String getUserAgent();
+    public abstract String[] getHeaders();
 
     /**
      * POST使用form作为body场景使用
@@ -68,6 +54,20 @@ public abstract class HttpClientService {
      */
     public String postForm(String url, String params) throws IOException, GeneralSecurityException, InterruptedException {
         return post(url, params, FORM);
+    }
+
+
+    /**
+     * POST使用form作为body场景使用
+     *
+     * @param url    请求的URL
+     * @param params form格式参数
+     * @return 返回的json内容
+     * @throws IOException          json操作IO异常
+     * @throws InterruptedException 运行中断异常
+     */
+    public String postForm(String url, Map<String, String> params) throws IOException, InterruptedException {
+        return post(url, buildHttpQuery(params), FORM);
     }
 
     /**
@@ -85,14 +85,12 @@ public abstract class HttpClientService {
 
     private String post(String url, String params, String contentType) throws IOException, InterruptedException {
         var requestBody = HttpRequest.BodyPublishers.ofString(params);
-        var postRequest = HttpRequest.newBuilder()
-                .header("Referer", getReferer())
-                .header("Cookie", getCookie())
-                .header("User-Agent", getUserAgent())
+        var request = HttpRequest.newBuilder()
+                .headers(getHeaders())
                 .header("Content-Type", contentType)
                 .header("Accept-Encoding", GZIP)
                 .POST(requestBody).uri(URI.create(url)).build();
-        var response = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         if (response.statusCode() / 10 == 20 && response.body() != null) {
             return response.body();
         }
@@ -124,9 +122,7 @@ public abstract class HttpClientService {
         var request = HttpRequest.newBuilder()
                 .GET()
                 .uri(URI.create(url))
-                .header("Referer", getReferer())
-                .header("Cookie", getCookie())
-                .header("User-Agent", getUserAgent())
+                .headers(getHeaders())
                 .build();
         var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         if (response.statusCode() / 10 == 20 && response.body() != null) {

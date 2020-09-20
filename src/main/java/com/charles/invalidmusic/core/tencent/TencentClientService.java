@@ -25,17 +25,9 @@ public class TencentClientService extends HttpClientService {
     }
 
     @Override
-    public String getReferer() {
-        return REFERER;
-    }
-
-    @Override
-    public String getCookie() {
-        return COOKIE;
-    }
-
-    @Override
-    public String getUserAgent() {
-        return USERAGENT;
+    public String[] getHeaders() {
+        return new String[]{
+                "Referer", REFERER, "Cookie", COOKIE, "User-Agent", USERAGENT
+        };
     }
 }
