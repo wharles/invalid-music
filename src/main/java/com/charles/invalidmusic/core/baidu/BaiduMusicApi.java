@@ -6,7 +6,7 @@ import com.charles.invalidmusic.core.model.*;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BaiduMusicApi implements MusicApi {
+public class BaiduMusicApi extends MusicApi {
     @Override
     public Platform getPlatform() {
         return Platform.BAIDU;

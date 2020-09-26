@@ -1,12 +1,10 @@
 package com.charles.invalidmusic.core.netease;
 
-import com.charles.invalidmusic.core.base.JsonBeanService;
 import com.charles.invalidmusic.core.MusicApi;
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,20 +24,14 @@ import java.util.Arrays;
  * @since 2020/08/30
  */
 @Component
-public class NeteaseMusicApi implements MusicApi {
+public class NeteaseMusicApi extends MusicApi {
     private static final Logger LOGGER = LoggerFactory.getLogger(NeteaseMusicApi.class);
 
     private final HttpClientService httpClientService;
 
-    private final JsonBeanService jsonBeanService;
-
-    private ObjectMapper mapper = new ObjectMapper();
-
     @Autowired
-    public NeteaseMusicApi(@Qualifier("NeteaseClientService") HttpClientService httpClientService,
-                           @Qualifier("NeteaseJsonService") JsonBeanService jsonBeanService) {
+    public NeteaseMusicApi(@Qualifier("NeteaseClientService") HttpClientService httpClientService) {
         this.httpClientService = httpClientService;
-        this.jsonBeanService = jsonBeanService;
     }
 
     @Override
@@ -60,12 +52,12 @@ public class NeteaseMusicApi implements MusicApi {
         try {
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                return jsonBeanService.getSearchItemPageList(limit, page, resultModel);
+                return getSearchItemPageList(limit, page, resultModel, "/result/songCount", "/result/songs");
             }
         } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("search music failed, reason:", e);
         }
-        return jsonBeanService.getSearchItemPageList(limit, page, null);
+        return getSearchItemPageList(limit, page);
     }
 
     @Override
@@ -77,7 +69,9 @@ public class NeteaseMusicApi implements MusicApi {
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
                 UrlInfo urlInfo = getUrlById(999000, songId);
-                return jsonBeanService.getSong(resultModel.path("songs").get(0), urlInfo);
+                Song song = mapper.treeToValue(resultModel.at("/songs/0"), Song.class);
+                song.setUrlInfo(urlInfo);
+                return song;
             }
         } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get music by id failed, reason:", e);
@@ -95,7 +89,7 @@ public class NeteaseMusicApi implements MusicApi {
         try {
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                return jsonBeanService.getPlaylist(resultModel);
+                return mapper.treeToValue(resultModel.path("playlist"), Playlist.class);
             }
         } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get playlist by id failed, reason:", e);
@@ -113,7 +107,7 @@ public class NeteaseMusicApi implements MusicApi {
                     .put("csrf_token", "");
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                return jsonBeanService.getUrlInfo(bitrate, resultModel);
+                return mapper.treeToValue(resultModel.at("/data/0"), UrlInfo.class);
             }
         } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get url by id failed, reason:", e);
@@ -134,7 +128,7 @@ public class NeteaseMusicApi implements MusicApi {
                     .put("csrf_token", "");
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                return jsonBeanService.getLyric(resultModel);
+                return mapper.treeToValue(resultModel, Lyric.class);
             }
         } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get lyric by id failed, reason:", e);

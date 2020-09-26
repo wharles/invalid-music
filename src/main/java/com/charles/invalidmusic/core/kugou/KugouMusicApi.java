@@ -3,7 +3,6 @@ package com.charles.invalidmusic.core.kugou;
 import com.charles.invalidmusic.core.MusicApi;
 import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.base.HttpClientService;
-import com.charles.invalidmusic.core.base.JsonBeanService;
 import com.charles.invalidmusic.core.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,19 +17,15 @@ import java.io.IOException;
 import java.util.Map;
 
 @Component
-public class KugouMusicApi implements MusicApi {
+public class KugouMusicApi extends MusicApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KugouMusicApi.class);
 
     private final HttpClientService httpClientService;
 
-    private final JsonBeanService jsonBeanService;
-
     @Autowired
-    public KugouMusicApi(@Qualifier("KugouClientService") HttpClientService httpClientService,
-                           @Qualifier("KugouJsonService") JsonBeanService jsonBeanService) {
+    public KugouMusicApi(@Qualifier("KugouClientService") HttpClientService httpClientService) {
         this.httpClientService = httpClientService;
-        this.jsonBeanService = jsonBeanService;
     }
 
     @Override
@@ -57,12 +52,12 @@ public class KugouMusicApi implements MusicApi {
             var content = httpClientService.get(url, params);
             var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                return jsonBeanService.getSearchItemPageList(limit, page, resultModel.path("data"));
+                return getSearchItemPageList(limit, page, resultModel, "/data/total", "/data/info");
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("search music failed, reason:", e);
         }
-        return jsonBeanService.getSearchItemPageList(limit, page, null);
+        return getSearchItemPageList(limit, page);
     }
 
     @Override

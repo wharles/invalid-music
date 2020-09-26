@@ -1,13 +1,11 @@
 package com.charles.invalidmusic.core.tencent;
 
-import com.charles.invalidmusic.core.base.JsonBeanService;
 import com.charles.invalidmusic.core.MusicApi;
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.model.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,18 +18,14 @@ import java.io.IOException;
 import java.util.*;
 
 @Component
-public class TencentMusicApi implements MusicApi {
+public class TencentMusicApi extends MusicApi {
     private static final Logger LOGGER = LoggerFactory.getLogger(TencentMusicApi.class);
 
     private final HttpClientService httpClientService;
 
-    private final JsonBeanService jsonBeanService;
-
     @Autowired
-    public TencentMusicApi(@Qualifier("TencentClientService") HttpClientService httpClientService,
-                           @Qualifier("TencentJsonService") JsonBeanService jsonBeanService) {
+    public TencentMusicApi(@Qualifier("TencentClientService") HttpClientService httpClientService) {
         this.httpClientService = httpClientService;
-        this.jsonBeanService = jsonBeanService;
     }
 
     private static final Map<String, String> bitMap = Map.of(
@@ -66,12 +60,12 @@ public class TencentMusicApi implements MusicApi {
             String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                return jsonBeanService.getSearchItemPageList(limit, page, resultModel.path("data").path("song"));
+                return getSearchItemPageList(limit, page, resultModel, "/data/song/totalnum", "/data/song/list");
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("search music failed, reason:", e);
         }
-        return jsonBeanService.getSearchItemPageList(limit, page, null);
+        return getSearchItemPageList(limit, page);
     }
 
     @Override
@@ -89,7 +83,9 @@ public class TencentMusicApi implements MusicApi {
                 JsonNode songNode = resultModel.path("data").get(0);
                 UrlInfo urlInfo = getUrlById(999000, songId);
                 setFileSize(urlInfo, songNode);
-                return jsonBeanService.getSong(songNode, urlInfo);
+                Song song = mapper.treeToValue(songNode, Song.class);
+                song.setUrlInfo(urlInfo);
+                return song;
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("get song by id failed, reason:", e);
@@ -110,7 +106,7 @@ public class TencentMusicApi implements MusicApi {
             String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                return jsonBeanService.getPlaylist(resultModel.path("data").path("cdlist").get(0));
+                return mapper.treeToValue(resultModel.at("/data/cdlist/0"), Playlist.class);
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("get song by id failed, reason:", e);
@@ -133,8 +129,7 @@ public class TencentMusicApi implements MusicApi {
             String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                JsonNode dataNode = resultModel.path("req_0").path("data");
-                return jsonBeanService.getUrlInfo(bitrate, dataNode);
+                return new UrlInfo(bitrate, resultModel.at("/req_0/data"));
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("get url by song id failed, reason:", e);
@@ -154,7 +149,7 @@ public class TencentMusicApi implements MusicApi {
             String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                return jsonBeanService.getLyric(resultModel);
+                return mapper.treeToValue(resultModel, Lyric.class);
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("get lyric by song id failed, reason:", e);
@@ -166,7 +161,6 @@ public class TencentMusicApi implements MusicApi {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode resultModel = mapper.readTree(json);
         if (resultModel == null || resultModel.path("code").asInt() != 0) {
             return null;
@@ -175,7 +169,6 @@ public class TencentMusicApi implements MusicApi {
     }
 
     private String getDataJson(String[] songId) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
 
         ObjectNode paramNode = mapper.createObjectNode();
         paramNode.put("guid", "358840384")
