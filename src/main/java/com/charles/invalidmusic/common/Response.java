@@ -1,6 +1,5 @@
 package com.charles.invalidmusic.common;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

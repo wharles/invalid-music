@@ -1,5 +1,7 @@
 package com.charles.invalidmusic.core.base;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,6 +24,8 @@ import java.time.Duration;
  */
 @Configuration
 public class HttpConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpConfiguration.class);
+
     @Bean
     public X509TrustManager x509TrustManager() {
         return new X509TrustManager() {
@@ -48,7 +52,7 @@ public class HttpConfiguration {
             sslContext.init(null, new TrustManager[]{x509TrustManager()}, new SecureRandom());
             return sslContext;
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            e.printStackTrace();
+            LOGGER.info("trust all certs context failed, reason:", e);
         }
         return null;
     }
