@@ -4,6 +4,7 @@ import com.charles.invalidmusic.core.base.HttpClientService;
 import org.springframework.stereotype.Component;
 
 import java.net.http.HttpClient;
+import java.util.Random;
 
 /**
  * KugouClientService
@@ -18,6 +19,8 @@ public class KugouClientService extends HttpClientService {
 
     private static final String UNI_USERAGENT = "iOS11.4-Phone8990-1009-0-WiFi";
 
+    private static final String COOKIE = "kg_mid=" + new Random().nextInt(10000);
+
     public KugouClientService(HttpClient httpClient) {
         super(httpClient);
     }
@@ -26,7 +29,8 @@ public class KugouClientService extends HttpClientService {
     public String[] getHeaders() {
         return new String[]{
                 "User-Agent", USERAGENT,
-                "UNI-UserAgent", UNI_USERAGENT
+                "UNI-UserAgent", UNI_USERAGENT,
+                "Cookie", COOKIE
         };
     }
 }

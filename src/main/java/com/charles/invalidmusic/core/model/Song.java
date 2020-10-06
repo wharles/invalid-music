@@ -17,16 +17,19 @@ import java.util.ArrayList;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Song {
-    @JsonAlias({"id", "mid"})
+    @JsonAlias({"id", "mid", "hash"})
     public String id;
 
-    @JsonAlias({"name"})
+    @JsonAlias({"name", "song_name"})
     public String name;
 
+    @JsonAlias({"album_name"})
     public String albumName;
 
+    @JsonAlias({"author_name"})
     public String artistName;
 
+    @JsonAlias({"img"})
     public String albumUrl;
 
     public UrlInfo urlInfo;

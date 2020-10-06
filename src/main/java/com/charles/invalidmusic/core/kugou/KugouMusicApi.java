@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 @Component
@@ -50,7 +51,7 @@ public class KugouMusicApi extends MusicApi {
         );
         try {
             var content = httpClientService.get(url, params);
-            var resultModel = checkAndGetJson(content);
+            var resultModel = checkAndGetJson(content, "errcode");
             if (resultModel != null) {
                 return getSearchItemPageList(limit, page, resultModel, "/data/total", "/data/info");
             }
@@ -62,33 +63,107 @@ public class KugouMusicApi extends MusicApi {
 
     @Override
     public Song getSongById(String songId) {
+        var url = "https://wwwapi.kugou.com/yy/index.php";
+        var params = Map.of("hash", songId, "r", "play/getdata");
+        try {
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content, "err_code");
+            if (resultModel != null) {
+                UrlInfo urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                Song song = mapper.treeToValue(resultModel.at("/data"), Song.class);
+                song.setUrlInfo(urlInfo);
+                return song;
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("get song by id failed, reason:", e);
+        }
         return null;
     }
 
     @Override
     public Playlist getPlaylistById(String playlistId) {
+        var url = "http://mobilecdn.kugou.com/api/v3/special/song";
+        var params = Map.of("specialid", playlistId,
+                "area_code", "1",
+                "page", "1",
+                "plat", "2",
+                "pagesize", "-1",
+                "version", "8990");
+        try {
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content, "errcode");
+            if (resultModel != null) {
+                var playlist = new Playlist();
+                playlist.setId(playlistId);
+                var songs = new ArrayList<Song>();
+                var infoNodes = resultModel.at("/data/info");
+                for (var infoNode : infoNodes) {
+                    Song song = getSong(infoNode);
+                    songs.add(song);
+                }
+                playlist.setSongs(songs);
+                return playlist;
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("get playlist by id failed, reason:", e);
+        }
         return null;
     }
 
     @Override
     public UrlInfo getUrlById(int bitrate, String... songId) {
+        var url = "https://wwwapi.kugou.com/yy/index.php";
+        var params = Map.of("hash", songId[0], "r", "play/getdata");
+        try {
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content, "err_code");
+            if (resultModel != null) {
+                return mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("get song by id failed, reason:", e);
+        }
         return null;
     }
 
     @Override
     public Lyric getLyricById(String songId) {
+        var url = "https://wwwapi.kugou.com/yy/index.php";
+        var params = Map.of("hash", songId, "r", "play/getdata");
+        try {
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content, "err_code");
+            if (resultModel != null) {
+                Lyric lyric = new Lyric();
+                lyric.setContent(resultModel.at("/data/lyrics").asText());
+                return lyric;
+            }
+        } catch (IOException | InterruptedException e) {
+            LOGGER.error("get lyric by id failed, reason:", e);
+        }
         return null;
     }
 
-    private JsonNode checkAndGetJson(String json) throws IOException {
+    private JsonNode checkAndGetJson(String json, String errorPath) throws IOException {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
         var mapper = new ObjectMapper();
         var resultModel = mapper.readTree(json);
-        if (resultModel == null || resultModel.path("errcode").asInt() != 0) {
+        if (resultModel == null || resultModel.path(errorPath).asInt() != 0) {
             return null;
         }
         return resultModel;
+    }
+
+    private Song getSong(JsonNode infoNode) {
+        var song = new Song();
+        song.setId(infoNode.path("hash").asText());
+        var filename = infoNode.path("filename").asText();
+        if (filename != null && filename.contains("-")) {
+            song.setName(filename.split("-")[1].trim());
+            song.setArtistName(filename.split("-")[0].trim());
+        }
+        return song;
     }
 }

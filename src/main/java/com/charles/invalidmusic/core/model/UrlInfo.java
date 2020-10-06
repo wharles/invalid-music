@@ -8,16 +8,16 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UrlInfo {
-    @JsonAlias({"id"})
+    @JsonAlias({"id", "hash"})
     private String id;
 
-    @JsonAlias({"url"})
+    @JsonAlias({"url", "play_url"})
     private String url;
 
-    @JsonAlias({"br"})
+    @JsonAlias({"br", "bitrate"})
     private Integer bitrate;
 
-    @JsonAlias({"size"})
+    @JsonAlias({"size", "filesize"})
     private Long size;
 
     public UrlInfo() {

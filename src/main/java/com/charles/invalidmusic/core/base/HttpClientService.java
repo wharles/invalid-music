@@ -141,7 +141,7 @@ public abstract class HttpClientService {
      * @throws InterruptedException 运行中断异常
      */
     public String get(String url, Map<String, String> params) throws IOException, InterruptedException {
-        var urlWithParams = url + "?" + buildHttpQuery(params);
+        var urlWithParams = params.isEmpty() ? url : url + "?" + buildHttpQuery(params);
         return this.get(urlWithParams);
     }
 }
