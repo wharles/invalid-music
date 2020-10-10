@@ -9,7 +9,7 @@ import java.util.stream.Stream;
  * @since 2020/8/30 12:46 下午
  */
 public enum Platform {
-    NETEASE("netease"), TENCENT("tencent"), XIAMI("xiami"), KUGOU("kugou"), BAIDU("BAIDU");
+    NETEASE("netease"), TENCENT("tencent"), XIAMI("xiami"), KUGOU("kugou"), MIGU("migu");
 
     private String value;
 

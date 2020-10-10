@@ -9,16 +9,16 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Playlist {
-    @JsonAlias({"id", "disstid"})
+    @JsonAlias({"id", "disstid", "playListId"})
     private String id;
 
-    @JsonAlias({"name", "dissname"})
+    @JsonAlias({"name", "dissname", "playListName"})
     private String name;
 
-    @JsonAlias({"description", "desc"})
+    @JsonAlias({"description", "desc", "summary"})
     private String description;
 
-    @JsonAlias({"coverImgUrl", "logo"})
+    @JsonAlias({"coverImgUrl", "logo", "image"})
     private String coverImgUrl;
 
     @JsonAlias({"tracks", "songlist"})

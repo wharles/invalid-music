@@ -17,16 +17,16 @@ import java.util.ArrayList;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Song {
-    @JsonAlias({"id", "mid", "hash"})
+    @JsonAlias({"id", "mid", "hash", "songId"})
     public String id;
 
-    @JsonAlias({"name", "song_name"})
+    @JsonAlias({"name", "song_name", "songName", "contentName"})
     public String name;
 
     @JsonAlias({"album_name"})
     public String albumName;
 
-    @JsonAlias({"author_name"})
+    @JsonAlias({"author_name", "singerName"})
     public String artistName;
 
     @JsonAlias({"img"})
@@ -42,26 +42,46 @@ public class Song {
 
     @JsonProperty("album")
     public void unpackAlbumFromNestedAlbum(JsonNode albumNode) {
-        this.albumName = albumNode.path("name").asText();
-        var albumId = albumNode.path("mid").asText();
-        this.albumUrl = "https://y.gtimg.cn/music/photo_new/T002R300x300M000" + albumId + ".jpg?max_age=2592000";
+        if (!albumNode.isTextual()) {
+            this.albumName = albumNode.path("name").asText();
+            var albumId = albumNode.path("mid").asText();
+            this.albumUrl = "https://y.gtimg.cn/music/photo_new/T002R300x300M000" + albumId + ".jpg?max_age=2592000";
+        } else {
+            this.albumName = albumNode.asText();
+        }
     }
 
     @JsonProperty("singer")
     public void unpackArtistNameFromNestedSinger(JsonNode singerNode) {
-        var list = new ArrayList<String>();
-        for (var artistNode : singerNode) {
-            list.add(artistNode.path("name").asText());
+        if (!singerNode.isTextual()) {
+            this.artistName = combineJsonArray(singerNode);
         }
-        this.artistName = String.join(",", list);
     }
 
     @JsonProperty("ar")
     public void unpackArtistNameFromNestedAr(JsonNode artistsNode) {
-        var list = new ArrayList<String>();
-        for (var artistNode : artistsNode) {
-            list.add(artistNode.path("name").asText());
+        this.artistName = combineJsonArray(artistsNode);
+    }
+
+    @JsonProperty("artists")
+    public void unpackArtistNameFromNestedArtists(JsonNode artistsNode) {
+        this.artistName = combineJsonArray(artistsNode);
+    }
+
+    @JsonProperty("albumImgs")
+    public void unpackImgFromNestedalbumImgs(JsonNode albumImgsNode) {
+        for (JsonNode albumImgNode : albumImgsNode) {
+            if ("02".equals(albumImgNode.path("imgSizeType").asText())) {
+                this.albumUrl = albumImgNode.path("img").asText();
+            }
         }
-        this.artistName = String.join(",", list);
+    }
+
+    private String combineJsonArray(JsonNode jsonNode) {
+        var list = new ArrayList<String>();
+        for (var node : jsonNode) {
+            list.add(node.path("name").asText());
+        }
+        return String.join(",", list);
     }
 }

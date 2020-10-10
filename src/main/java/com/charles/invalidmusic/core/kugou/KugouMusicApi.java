@@ -5,7 +5,6 @@ import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,7 +147,6 @@ public class KugouMusicApi extends MusicApi {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        var mapper = new ObjectMapper();
         var resultModel = mapper.readTree(json);
         if (resultModel == null || resultModel.path(errorPath).asInt() != 0) {
             return null;

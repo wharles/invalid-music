@@ -1,4 +1,4 @@
-package com.charles.invalidmusic.core.netease.util;
+package com.charles.invalidmusic.core.util;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 
@@ -8,6 +8,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.Random;
 
 /**
  * EncryptionUtil
@@ -20,30 +21,40 @@ public final class EncryptionUtil {
     private EncryptionUtil() {
     }
 
-    public static final String SECRET_KEY = "TA3YiYCfY2dDJQgg";
-    public static final String ENC_SEC_KEY = "84ca47bca10bad09a6b04c5c927ef077d9b9f1e37098aa3eac6ea70eb59df0aa28b691b7e75e4f1f9831754919ea784c8f74fbfadf2898b0be17849fd656060162857830e241aba44991601f137624094c114ea8d17bce815b0cd4e5b8e2fbaba978c6d1d14dc3d1faf852bdd28818031ccdaaa13a6018e1024e2aae98844210";
-    public static final String NONCE = "0CoJUm6Qyw8W8jud";
-    public static final String IV = "0102030405060708";
-
     /**
      * AES加密
      * 此处使用AES-128-CBC加密模式，key需要为16位
      *
      * @param sSrc 加密内容
      * @param sKey 偏移量
+     * @param sIV sIV
      * @return 密文
      */
-    public static String encrypt(String sSrc, String sKey) throws GeneralSecurityException {
+    public static String encrypt(String sSrc, String sKey, String sIV) throws GeneralSecurityException {
 
         byte[] raw = sKey.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec sKeySpec = new SecretKeySpec(raw, "AES");
 
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        IvParameterSpec iv = new IvParameterSpec(IV.getBytes());
+        IvParameterSpec iv = new IvParameterSpec(sIV.getBytes());
 
         cipher.init(Cipher.ENCRYPT_MODE, sKeySpec, iv);
         byte[] encrypted = cipher.doFinal(sSrc.getBytes());
 
         return new String(Base64.encodeBase64(encrypted));
+    }
+
+    /**
+     * 生产指定位数16进制随机数
+     *
+     * @param len 长度
+     * @return 16进制随机数
+     */
+    public static String getRandomHex(int len) {
+        var result = new StringBuilder();
+        for (var i = 0; i < len; i++) {
+            result.append(Integer.toHexString(new Random().nextInt(16)));
+        }
+        return result.toString().toUpperCase();
     }
 }

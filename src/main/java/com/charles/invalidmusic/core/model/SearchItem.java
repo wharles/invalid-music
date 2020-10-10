@@ -14,13 +14,13 @@ public class SearchItem {
     @JsonAlias({"id", "mid", "hash"})
     public String id;
 
-    @JsonAlias({"name", "songname"})
+    @JsonAlias({"name", "songname", "songName"})
     public String name;
 
-    @JsonAlias({"album_name"})
+    @JsonAlias({"album_name", "albumName"})
     public String albumName;
 
-    @JsonAlias({"singername"})
+    @JsonAlias({"singername", "singerName"})
     public String artistName;
 
     public String source;

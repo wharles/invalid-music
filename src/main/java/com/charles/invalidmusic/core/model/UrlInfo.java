@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UrlInfo {
-    @JsonAlias({"id", "hash"})
+    @JsonAlias({"id", "hash", "songId"})
     private String id;
 
     @JsonAlias({"url", "play_url"})
