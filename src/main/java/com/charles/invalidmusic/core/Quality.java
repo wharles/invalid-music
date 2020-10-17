@@ -9,7 +9,7 @@ import java.util.stream.Stream;
  * @since 2020/10/17 2:57 下午
  */
 public enum Quality {
-    LQ("LQ", 192000), HQ("HQ", 32000), SQ("SQ", 999000);
+    LQ("LQ", 192000), HQ("HQ", 320000), SQ("SQ", 999000);
 
     private final String name;
 
