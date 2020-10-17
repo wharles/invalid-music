@@ -20,7 +20,7 @@ Invalid Music: 音乐API合集Java版，感谢 <a href="https://github.com/metow
 
 ## 依赖
 
-JDK 11+
+JDK 15+
 
 ## 快速开始
 
