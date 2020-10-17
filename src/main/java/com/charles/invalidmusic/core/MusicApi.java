@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * MusicApi
@@ -18,11 +19,11 @@ public abstract class MusicApi {
 
     public abstract PageList<SearchItem> search(String keyword, int limit, int page, int type);
 
-    public abstract Song getSongById(String songId);
+    public abstract Song getSongById(String songId, Quality quality);
 
     public abstract Playlist getPlaylistById(String playlistId);
 
-    public abstract UrlInfo getUrlById(int bitrate, String... songId);
+    public abstract List<UrlInfo> getUrlById(Quality quality, String... songId);
 
     public abstract Lyric getLyricById(String songId);
 

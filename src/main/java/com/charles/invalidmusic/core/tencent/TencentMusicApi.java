@@ -1,6 +1,7 @@
 package com.charles.invalidmusic.core.tencent;
 
 import com.charles.invalidmusic.core.MusicApi;
+import com.charles.invalidmusic.core.Quality;
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.model.*;
@@ -69,7 +70,7 @@ public class TencentMusicApi extends MusicApi {
     }
 
     @Override
-    public Song getSongById(String songId) {
+    public Song getSongById(String songId, Quality quality) {
         String url = "https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg";
         var params = Map.of(
                 "songmid", String.valueOf(songId),
@@ -81,7 +82,7 @@ public class TencentMusicApi extends MusicApi {
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 JsonNode songNode = resultModel.path("data").get(0);
-                UrlInfo urlInfo = getUrlById(999000, songId);
+                UrlInfo urlInfo = getUrlById(quality, songId).get(0);
                 setFileSize(urlInfo, songNode);
                 Song song = mapper.treeToValue(songNode, Song.class);
                 song.setUrlInfo(urlInfo);
@@ -115,10 +116,10 @@ public class TencentMusicApi extends MusicApi {
     }
 
     @Override
-    public UrlInfo getUrlById(int bitrate, String... songId) {
+    public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         try {
             String url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
-            String dataJson = getDataJson(songId);
+            String dataJson = getDataJson(songIds);
 
             var params = Map.of(
                     "platform", "yqq.json",
@@ -129,12 +130,29 @@ public class TencentMusicApi extends MusicApi {
             String content = httpClientService.get(url, params);
             JsonNode resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                return new UrlInfo(bitrate, resultModel.at("/req_0/data"));
+                return getUrlInfos(quality.getBitrate(), resultModel.at("/req_0/data"));
             }
         } catch (IOException | InterruptedException e) {
             LOGGER.error("get url by song id failed, reason:", e);
         }
         return null;
+    }
+
+    public List<UrlInfo> getUrlInfos(int bitrate, JsonNode dataNode) {
+        var infoNodes = dataNode.path("midurlinfo");
+        List<UrlInfo> urlInfos = new ArrayList<>();
+        for (var infoNode : infoNodes) {
+            var sip = dataNode.path("sip").get(0).asText();
+            var purl = infoNode.path("purl").asText();
+
+            UrlInfo urlInfo = new UrlInfo();
+            urlInfo.setUrl(sip + purl);
+            urlInfo.setId(infoNode.path("songmid").asText());
+            urlInfo.setBitrate(bitrate);
+
+            urlInfos.add(urlInfo);
+        }
+        return urlInfos;
     }
 
     @Override
@@ -168,7 +186,7 @@ public class TencentMusicApi extends MusicApi {
         return resultModel;
     }
 
-    private String getDataJson(String[] songId) throws JsonProcessingException {
+    private String getDataJson(String[] songIds) throws JsonProcessingException {
 
         ObjectNode paramNode = mapper.createObjectNode();
         paramNode.put("guid", "358840384")
@@ -176,7 +194,7 @@ public class TencentMusicApi extends MusicApi {
                 .put("loginflag", 1)
                 .put("platform", "20");
 
-        for (String mid : songId) {
+        for (String mid : songIds) {
             paramNode.set("songmid", mapper.createArrayNode().add(mid));
             paramNode.set("songtype", mapper.createArrayNode().add(0));
         }
@@ -202,6 +220,6 @@ public class TencentMusicApi extends MusicApi {
         String bitStr = urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('/') + 1, urlInfo.getUrl().lastIndexOf('/') + 5);
         String sizePath = bitMap.get(bitStr);
         urlInfo.setSize(songNode.path("file").path(sizePath).asLong());
-        urlInfo.setBitrate(Integer.parseInt(sizePath.substring(sizePath.indexOf('_') + 1, sizePath.length() - 3)));
+        urlInfo.setBitrate(Integer.parseInt(sizePath.substring(sizePath.indexOf('_') + 1, sizePath.length() - 3)) * 1000);
     }
 }

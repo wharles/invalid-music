@@ -16,7 +16,7 @@ Invalid Music: 音乐API合集Java版，感谢 <a href="https://github.com/metow
 - [x] 腾讯QQ音乐 支持
 - [x] 酷狗音乐 支持
 - [x] 咪咕音乐 支持
-- [x] 虾米音乐 待开发 
+- [x] 虾米音乐 支持 
 
 ## 依赖
 

@@ -6,8 +6,11 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 /**
@@ -27,7 +30,7 @@ public final class EncryptionUtil {
      *
      * @param sSrc 加密内容
      * @param sKey 偏移量
-     * @param sIV sIV
+     * @param sIV  sIV
      * @return 密文
      */
     public static String encrypt(String sSrc, String sKey, String sIV) throws GeneralSecurityException {
@@ -56,5 +59,20 @@ public final class EncryptionUtil {
             result.append(Integer.toHexString(new Random().nextInt(16)));
         }
         return result.toString().toUpperCase();
+    }
+
+    public static String generateMD5(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] messageDigest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            BigInteger no = new BigInteger(1, messageDigest);
+            StringBuilder hashText = new StringBuilder(no.toString(16));
+            while (hashText.length() < 32) {
+                hashText.insert(0, "0");
+            }
+            return hashText.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

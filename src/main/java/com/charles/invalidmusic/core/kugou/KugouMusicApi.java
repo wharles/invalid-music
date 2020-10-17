@@ -2,6 +2,7 @@ package com.charles.invalidmusic.core.kugou;
 
 import com.charles.invalidmusic.core.MusicApi;
 import com.charles.invalidmusic.core.Platform;
+import com.charles.invalidmusic.core.Quality;
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +15,10 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class KugouMusicApi extends MusicApi {
@@ -61,7 +65,7 @@ public class KugouMusicApi extends MusicApi {
     }
 
     @Override
-    public Song getSongById(String songId) {
+    public Song getSongById(String songId, Quality quality) {
         var url = "https://wwwapi.kugou.com/yy/index.php";
         var params = Map.of("hash", songId, "r", "play/getdata");
         try {
@@ -110,19 +114,22 @@ public class KugouMusicApi extends MusicApi {
     }
 
     @Override
-    public UrlInfo getUrlById(int bitrate, String... songId) {
+    public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         var url = "https://wwwapi.kugou.com/yy/index.php";
-        var params = Map.of("hash", songId[0], "r", "play/getdata");
-        try {
-            var content = httpClientService.get(url, params);
-            var resultModel = checkAndGetJson(content, "err_code");
-            if (resultModel != null) {
-                return mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+
+        var paramsList = Stream.of(songIds).map(songId -> Map.of("hash", songId, "r", "play/getdata")).collect(Collectors.toList());
+        var contents = httpClientService.getRequests(url, paramsList);
+        return contents.stream().map(content -> {
+            try {
+                var resultModel = checkAndGetJson(content, "err_code");
+                if (resultModel != null) {
+                    return mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                }
+            } catch (IOException e) {
+                LOGGER.error("get song by id failed, reason:", e);
             }
-        } catch (IOException | InterruptedException e) {
-            LOGGER.error("get song by id failed, reason:", e);
-        }
-        return null;
+            return null;
+        }).collect(Collectors.toList());
     }
 
     @Override

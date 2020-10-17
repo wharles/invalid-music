@@ -10,7 +10,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -28,7 +31,6 @@ public abstract class HttpClientService {
     private static final String GZIP = "application/gzip";
 
     private final HttpClient httpClient;
-
 
     @Autowired
     public HttpClientService(HttpClient httpClient) {
@@ -129,6 +131,31 @@ public abstract class HttpClientService {
             return response.body();
         }
         return null;
+    }
+
+    /**
+     * 并发get请求
+     *
+     * @param baseUrl    baseUrl
+     * @param paramsList params集合
+     * @return 请求返回体集合
+     */
+    public List<String> getRequests(String baseUrl, List<Map<String, String>> paramsList) {
+        var futures = paramsList.stream().map(params -> HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(baseUrl + "?" + buildHttpQuery(params)))
+                .headers(getHeaders())
+                .build())
+                .map(request -> httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)))
+                .collect(Collectors.toList());
+        var results = new ArrayList<String>();
+        futures.forEach(e -> e.whenComplete((response, error) -> {
+            if (error == null && response.statusCode() / 10 == 20 && response.body() != null) {
+                results.add(response.body());
+            }
+        }));
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+        return results;
     }
 
     /**

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchItem {
-    @JsonAlias({"id", "mid", "hash"})
+    @JsonAlias({"id", "mid", "hash", "songId"})
     public String id;
 
     @JsonAlias({"name", "songname", "songName"})
@@ -20,7 +20,7 @@ public class SearchItem {
     @JsonAlias({"album_name", "albumName"})
     public String albumName;
 
-    @JsonAlias({"singername", "singerName"})
+    @JsonAlias({"singername", "singerName", "artistName"})
     public String artistName;
 
     public String source;

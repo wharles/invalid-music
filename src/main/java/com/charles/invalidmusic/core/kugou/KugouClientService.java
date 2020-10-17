@@ -1,10 +1,10 @@
 package com.charles.invalidmusic.core.kugou;
 
 import com.charles.invalidmusic.core.base.HttpClientService;
+import com.charles.invalidmusic.core.util.EncryptionUtil;
 import org.springframework.stereotype.Component;
 
 import java.net.http.HttpClient;
-import java.util.Random;
 
 /**
  * KugouClientService
@@ -19,7 +19,7 @@ public class KugouClientService extends HttpClientService {
 
     private static final String UNI_USERAGENT = "iOS11.4-Phone8990-1009-0-WiFi";
 
-    private static final String COOKIE = "kg_mid=" + new Random().nextInt(10000);
+    private static final String COOKIE = "kg_mid=" + EncryptionUtil.getRandomHex(32);
 
     public KugouClientService(HttpClient httpClient) {
         super(httpClient);

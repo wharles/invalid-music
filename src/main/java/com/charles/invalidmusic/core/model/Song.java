@@ -26,10 +26,10 @@ public class Song {
     @JsonAlias({"album_name"})
     public String albumName;
 
-    @JsonAlias({"author_name", "singerName"})
+    @JsonAlias({"author_name", "singerName", "artistName"})
     public String artistName;
 
-    @JsonAlias({"img"})
+    @JsonAlias({"img", "albumLogo"})
     public String albumUrl;
 
     public UrlInfo urlInfo;

@@ -1,6 +1,7 @@
 package com.charles.invalidmusic.core.netease;
 
 import com.charles.invalidmusic.core.MusicApi;
+import com.charles.invalidmusic.core.Quality;
 import com.charles.invalidmusic.core.base.HttpClientService;
 import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.model.*;
@@ -15,7 +16,9 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * NeteaseMusicApi
@@ -61,14 +64,14 @@ public class NeteaseMusicApi extends MusicApi {
     }
 
     @Override
-    public Song getSongById(String songId) {
+    public Song getSongById(String songId, Quality quality) {
         String url = "https://music.163.com/weapi/v3/song/detail?csrf_token=";
         ObjectNode rootNode = mapper.createObjectNode();
         rootNode.put("c", "[{\"id\":" + songId + "}]").put("csrf_token", "");
         try {
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                UrlInfo urlInfo = getUrlById(999000, songId);
+                UrlInfo urlInfo = getUrlById(quality, songId).get(0);
                 Song song = mapper.treeToValue(resultModel.at("/songs/0"), Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
@@ -98,16 +101,20 @@ public class NeteaseMusicApi extends MusicApi {
     }
 
     @Override
-    public UrlInfo getUrlById(int bitrate, String... songId) {
+    public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         try {
             String url = "https://music.163.com/weapi/song/enhance/player/url?csrf_token=";
             ObjectNode rootNode = mapper.createObjectNode();
-            rootNode.put("ids", Arrays.toString(songId))
-                    .put("br", bitrate)
+            rootNode.put("ids", Arrays.toString(songIds))
+                    .put("br", quality.getBitrate())
                     .put("csrf_token", "");
             JsonNode resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                return mapper.treeToValue(resultModel.at("/data/0"), UrlInfo.class);
+                List<UrlInfo> urlInfos = new ArrayList<>();
+                for (int i = 0; i < songIds.length; i++) {
+                    urlInfos.add(mapper.treeToValue(resultModel.at("/data/" + i), UrlInfo.class));
+                }
+                return urlInfos;
             }
         } catch (IOException | GeneralSecurityException | InterruptedException e) {
             LOGGER.error("get url by id failed, reason:", e);

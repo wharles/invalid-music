@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UrlInfo {
@@ -17,18 +20,9 @@ public class UrlInfo {
     @JsonAlias({"br", "bitrate"})
     private Integer bitrate;
 
-    @JsonAlias({"size", "filesize"})
+    @JsonAlias({"size", "filesize", "filesize"})
     private Long size;
 
     public UrlInfo() {
-    }
-
-    public UrlInfo(int bitrate, JsonNode dataNode) {
-        var infoNode = dataNode.path("midurlinfo").get(0);
-        var sip = dataNode.path("sip").get(0).asText();
-        var purl = infoNode.path("purl").asText();
-        this.url = sip + purl;
-        this.id = infoNode.path("songmid").asText();
-        this.bitrate = bitrate;
     }
 }

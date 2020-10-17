@@ -6,6 +6,7 @@ import com.charles.invalidmusic.common.ResponseList;
 import com.charles.invalidmusic.core.MusicApi;
 import com.charles.invalidmusic.core.MusicFactory;
 import com.charles.invalidmusic.core.Platform;
+import com.charles.invalidmusic.core.Quality;
 import com.charles.invalidmusic.core.model.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -16,6 +17,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * MusicController
@@ -92,11 +95,13 @@ public class MusicController {
     @ResponseBody
     @ApiImplicitParams({
             @ApiImplicitParam(name = "songId", value = "歌曲ID", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease")
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease"),
+            @ApiImplicitParam(name = "quality", value = "歌曲质量", defaultValue = "HQ")
     })
     @RequestMapping(value = "/song/{songId}", method = RequestMethod.GET)
     public Response<Song> song(@PathVariable @Nullable String songId,
-                               @RequestParam @Nullable String platform) throws BaseException {
+                               @RequestParam @Nullable String platform,
+                               @RequestParam String quality) throws BaseException {
         if (StringUtils.isEmpty(songId)) {
             throw new BaseException("The params of songId can not be null.");
         }
@@ -104,7 +109,7 @@ public class MusicController {
         if (pf != null) {
             musicApi = MusicFactory.factory(pf);
         }
-        Song song = musicApi.getSongById(songId);
+        Song song = musicApi.getSongById(songId, Quality.forName(quality) == null ? Quality.HQ : Quality.forName(quality));
         return new Response<>(song);
     }
 
@@ -112,11 +117,13 @@ public class MusicController {
     @ResponseBody
     @ApiImplicitParams({
             @ApiImplicitParam(name = "songId", value = "歌曲ID", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease")
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease"),
+            @ApiImplicitParam(name = "quality", value = "歌曲质量", defaultValue = "HQ")
     })
     @RequestMapping(value = "/url", method = RequestMethod.GET)
-    public Response<UrlInfo> url(@RequestParam @Nullable String songId,
-                                 @RequestParam @Nullable String platform) throws BaseException {
+    public Response<List<UrlInfo>> url(@RequestParam @Nullable String songId,
+                                       @RequestParam @Nullable String platform,
+                                       @RequestParam String quality) throws BaseException {
         if (StringUtils.isEmpty(songId)) {
             throw new BaseException("The params of songId can not be null.");
         }
@@ -124,8 +131,8 @@ public class MusicController {
         if (pf != null) {
             musicApi = MusicFactory.factory(pf);
         }
-        UrlInfo url = musicApi.getUrlById(999000, songId);
-        return new Response<>(url);
+        List<UrlInfo> urlInfoList = musicApi.getUrlById(Quality.forName(quality) == null ? Quality.HQ : Quality.forName(quality), songId);
+        return new Response<>(urlInfoList);
     }
 
     @ApiOperation("根据播放列表ID查询播放列表接口")
