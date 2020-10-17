@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Component
@@ -76,11 +77,11 @@ public class XiamiMusicApi extends MusicApi {
             if (resultModel != null) {
                 var listenFilesNode = resultModel.at("/data/data/songDetail/listenFiles");
                 int index = getIndex(quality, listenFilesNode);
-                UrlInfo urlInfo = mapper.treeToValue(listenFilesNode.get(index), UrlInfo.class);
+                var urlInfo = mapper.treeToValue(listenFilesNode.get(index), UrlInfo.class);
                 urlInfo.setId(songId);
                 urlInfo.setBitrate(quality.getBitrate());
 
-                Song song = mapper.treeToValue(resultModel.at("/data/data/songDetail"), Song.class);
+                var song = mapper.treeToValue(resultModel.at("/data/data/songDetail"), Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
             }
@@ -91,14 +92,10 @@ public class XiamiMusicApi extends MusicApi {
     }
 
     private int getIndex(Quality quality, JsonNode listenFilesNode) {
-        int index = 0;
-        for (var i = 0; i < listenFilesNode.size(); i++) {
-            if (quality.getName().substring(0, 1).equalsIgnoreCase(listenFilesNode.get(i).path("quality").asText())) {
-                index = i;
-                break;
-            }
-        }
-        return index;
+        return IntStream.range(0, listenFilesNode.size())
+                .filter(i -> quality.getName().substring(0, 1).equalsIgnoreCase(listenFilesNode.get(i).path("quality").asText()))
+                .findAny()
+                .orElse(0);
     }
 
     @Override
@@ -147,8 +144,8 @@ public class XiamiMusicApi extends MusicApi {
                 var resultModel = checkAndGetJson(content);
                 if (resultModel != null) {
                     var listenFilesNode = resultModel.at("/data/data/songDetail/listenFiles");
-                    int index = getIndex(quality, listenFilesNode);
-                    UrlInfo urlInfo = mapper.treeToValue(listenFilesNode.get(index), UrlInfo.class);
+                    var index = getIndex(quality, listenFilesNode);
+                    var urlInfo = mapper.treeToValue(listenFilesNode.get(index), UrlInfo.class);
                     urlInfo.setId(resultModel.at("/data/data/songDetail/songId").asText());
                     urlInfo.setBitrate(quality.getBitrate());
                     return urlInfo;
@@ -174,7 +171,7 @@ public class XiamiMusicApi extends MusicApi {
             var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 var lyrics = resultModel.at("/data/data/lyrics");
-                Lyric lyric = new Lyric();
+                var lyric = new Lyric();
                 for (var ly : lyrics) {
                     if (ly.path("type").asInt() == 2) {
                         lyric.setContent(ly.path("content").asText());

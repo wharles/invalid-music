@@ -48,7 +48,7 @@ public class HttpConfiguration {
     public SSLContext trustAllCertsContext() {
         try {
             //信任任何链接
-            SSLContext sslContext = SSLContext.getInstance("TLS");
+            var sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[]{x509TrustManager()}, new SecureRandom());
             return sslContext;
         } catch (NoSuchAlgorithmException | KeyManagementException e) {

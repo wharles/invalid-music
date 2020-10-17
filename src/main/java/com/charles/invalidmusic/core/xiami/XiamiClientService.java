@@ -93,7 +93,7 @@ public class XiamiClientService extends HttpClientService {
 
             var mapper = new ObjectMapper();
             var dataJson = mapper.writeValueAsString(params);
-            var sign = EncryptionUtil.generateMD5(String.format("%s&%s&%s&%s", token, ts, APP_KEY, dataJson));
+            var sign = EncryptionUtil.generateMD5("%s&%s&%s&%s".formatted(token, ts, APP_KEY, dataJson));
 
             return Map.of("appKey", APP_KEY,
                     "t", String.valueOf(ts),

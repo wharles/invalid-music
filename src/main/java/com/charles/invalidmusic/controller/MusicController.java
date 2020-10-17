@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MusicController
@@ -47,13 +48,13 @@ public class MusicController {
             @ApiImplicitParam(name = "pageSize", value = "分页大小", defaultValue = "20"),
             @ApiImplicitParam(name = "pageIndex", value = "分页页码", defaultValue = "1"),
             @ApiImplicitParam(name = "keyword", value = "查询关键字", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease")
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "NETEASE")
     })
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     public ResponseList<SearchItem> search(@RequestParam @Nullable Integer pageSize,
                                            @RequestParam @Nullable Integer pageIndex,
                                            @RequestParam @Nullable String keyword,
-                                           @RequestParam @Nullable String platform) throws BaseException {
+                                           @RequestParam @Nullable Platform platform) throws BaseException {
         if (pageIndex == null || pageIndex < 0) {
             pageIndex = 1;
         }
@@ -63,11 +64,8 @@ public class MusicController {
         if (StringUtils.isEmpty(keyword)) {
             throw new BaseException("The params of keyword can not be null.");
         }
-        Platform pf = Platform.forValue(platform);
-        if (pf != null) {
-            musicApi = MusicFactory.factory(pf);
-        }
-        PageList<SearchItem> itemPageList = musicApi.search(keyword, pageSize, pageIndex, SearchType.SONG);
+        musicApi = MusicFactory.factory(Optional.ofNullable(platform).orElse(Platform.NETEASE));
+        var itemPageList = musicApi.search(keyword, pageSize, pageIndex, SearchType.SONG);
         return new ResponseList<>(itemPageList.getTotal(), itemPageList.getLimit(), itemPageList.getPage(), itemPageList.getData());
     }
 
@@ -75,19 +73,16 @@ public class MusicController {
     @ResponseBody
     @ApiImplicitParams({
             @ApiImplicitParam(name = "songId", value = "歌曲ID", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease")
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "NETEASE")
     })
     @RequestMapping(value = "/lyric", method = RequestMethod.GET)
     public Response<Lyric> lyric(@RequestParam @Nullable String songId,
-                                 @RequestParam @Nullable String platform) throws BaseException {
+                                 @RequestParam @Nullable Platform platform) throws BaseException {
         if (StringUtils.isEmpty(songId)) {
             throw new BaseException("The params of songId can not be null.");
         }
-        Platform pf = Platform.forValue(platform);
-        if (pf != null) {
-            musicApi = MusicFactory.factory(pf);
-        }
-        Lyric lyric = musicApi.getLyricById(songId);
+        musicApi = MusicFactory.factory(Optional.ofNullable(platform).orElse(Platform.NETEASE));
+        var lyric = musicApi.getLyricById(songId);
         return new Response<>(lyric);
     }
 
@@ -95,21 +90,18 @@ public class MusicController {
     @ResponseBody
     @ApiImplicitParams({
             @ApiImplicitParam(name = "songId", value = "歌曲ID", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease"),
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "NETEASE"),
             @ApiImplicitParam(name = "quality", value = "歌曲质量", defaultValue = "HQ")
     })
     @RequestMapping(value = "/song/{songId}", method = RequestMethod.GET)
     public Response<Song> song(@PathVariable @Nullable String songId,
-                               @RequestParam @Nullable String platform,
-                               @RequestParam String quality) throws BaseException {
+                               @RequestParam @Nullable Platform platform,
+                               @RequestParam @Nullable Quality quality) throws BaseException {
         if (StringUtils.isEmpty(songId)) {
             throw new BaseException("The params of songId can not be null.");
         }
-        Platform pf = Platform.forValue(platform);
-        if (pf != null) {
-            musicApi = MusicFactory.factory(pf);
-        }
-        Song song = musicApi.getSongById(songId, Quality.forName(quality) == null ? Quality.HQ : Quality.forName(quality));
+        musicApi = MusicFactory.factory(Optional.ofNullable(platform).orElse(Platform.NETEASE));
+        var song = musicApi.getSongById(songId, Optional.ofNullable(quality).orElse(Quality.HQ));
         return new Response<>(song);
     }
 
@@ -117,21 +109,18 @@ public class MusicController {
     @ResponseBody
     @ApiImplicitParams({
             @ApiImplicitParam(name = "songId", value = "歌曲ID", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease"),
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "NETEASE"),
             @ApiImplicitParam(name = "quality", value = "歌曲质量", defaultValue = "HQ")
     })
     @RequestMapping(value = "/url", method = RequestMethod.GET)
     public Response<List<UrlInfo>> url(@RequestParam @Nullable String songId,
-                                       @RequestParam @Nullable String platform,
-                                       @RequestParam String quality) throws BaseException {
+                                       @RequestParam @Nullable Platform platform,
+                                       @RequestParam @Nullable Quality quality) throws BaseException {
         if (StringUtils.isEmpty(songId)) {
             throw new BaseException("The params of songId can not be null.");
         }
-        Platform pf = Platform.forValue(platform);
-        if (pf != null) {
-            musicApi = MusicFactory.factory(pf);
-        }
-        List<UrlInfo> urlInfoList = musicApi.getUrlById(Quality.forName(quality) == null ? Quality.HQ : Quality.forName(quality), songId);
+        musicApi = MusicFactory.factory(Optional.ofNullable(platform).orElse(Platform.NETEASE));
+        var urlInfoList = musicApi.getUrlById(Optional.ofNullable(quality).orElse(Quality.HQ), songId);
         return new Response<>(urlInfoList);
     }
 
@@ -139,18 +128,15 @@ public class MusicController {
     @ResponseBody
     @ApiImplicitParams({
             @ApiImplicitParam(name = "playlistId", value = "播放列表ID", required = true),
-            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "netease")
+            @ApiImplicitParam(name = "platform", value = "查询平台", defaultValue = "NETEASE")
     })
     @RequestMapping(value = "/playlist/{playlistId}", method = RequestMethod.GET)
-    public Response<Playlist> playlist(@PathVariable @Nullable String playlistId,
-                                       @RequestParam @Nullable String platform) throws BaseException {
+    public Response<Playlist> playlist(@PathVariable String playlistId,
+                                       @RequestParam @Nullable Platform platform) throws BaseException {
         if (StringUtils.isEmpty(playlistId)) {
             throw new BaseException("The params of playlistId can not be null.");
         }
-        Platform pf = Platform.forValue(platform);
-        if (pf != null) {
-            musicApi = MusicFactory.factory(pf);
-        }
+        musicApi = MusicFactory.factory(Optional.ofNullable(platform).orElse(Platform.NETEASE));
         return new Response<>(musicApi.getPlaylistById(playlistId));
     }
 }

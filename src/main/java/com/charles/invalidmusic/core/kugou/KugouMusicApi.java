@@ -39,7 +39,7 @@ public class KugouMusicApi extends MusicApi {
 
     @Override
     public PageList<SearchItem> search(String keyword, int limit, int page, int type) {
-        String url = "http://mobilecdn.kugou.com/api/v3/search/song";
+        var url = "http://mobilecdn.kugou.com/api/v3/search/song";
         var params = Map.of(
                 "api_ver", "1",
                 "area_code", "1",
@@ -71,8 +71,8 @@ public class KugouMusicApi extends MusicApi {
             var content = httpClientService.get(url);
             var resultModel = checkAndGetJson(content, "err_code");
             if (resultModel != null) {
-                UrlInfo urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
-                Song song = mapper.treeToValue(resultModel.at("/data"), Song.class);
+                var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                var song = mapper.treeToValue(resultModel.at("/data"), Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
             }
@@ -100,7 +100,7 @@ public class KugouMusicApi extends MusicApi {
                 var songs = new ArrayList<Song>();
                 var infoNodes = resultModel.at("/data/info");
                 for (var infoNode : infoNodes) {
-                    Song song = getSong(infoNode);
+                    var song = getSong(infoNode);
                     songs.add(song);
                 }
                 playlist.setSongs(songs);
@@ -140,7 +140,7 @@ public class KugouMusicApi extends MusicApi {
             var content = httpClientService.get(url);
             var resultModel = checkAndGetJson(content, "err_code");
             if (resultModel != null) {
-                Lyric lyric = new Lyric();
+                var lyric = new Lyric();
                 lyric.setContent(resultModel.at("/data/lyrics").asText());
                 return lyric;
             }

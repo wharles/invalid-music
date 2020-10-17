@@ -32,7 +32,7 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                                     HttpServletResponse response,
                                     FilterChain chain) throws IOException, ServletException {
 
-        String tokenHeader = request.getHeader(JwtTokenUtil.TOKEN_HEADER);
+        var tokenHeader = request.getHeader(JwtTokenUtil.TOKEN_HEADER);
         // 如果请求头中没有Authorization信息则直接放行了
         if (tokenHeader == null || !tokenHeader.startsWith(JwtTokenUtil.TOKEN_PREFIX)) {
             chain.doFilter(request, response);
@@ -51,13 +51,13 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     // 这里从token中获取用户信息并新建一个token
     private UsernamePasswordAuthenticationToken getAuthentication(String tokenHeader) throws RuntimeException {
-        String token = tokenHeader.replace(JwtTokenUtil.TOKEN_PREFIX, "");
-        boolean expiration = JwtTokenUtil.isExpiration(token);
+        var token = tokenHeader.replace(JwtTokenUtil.TOKEN_PREFIX, "");
+        var expiration = JwtTokenUtil.isExpiration(token);
         if (expiration) {
             throw new RuntimeException("Token is timeout");
         } else {
-            String username = JwtTokenUtil.getUsername(token);
-            String role = JwtTokenUtil.getUserRole(token);
+            var username = JwtTokenUtil.getUsername(token);
+            var role = JwtTokenUtil.getUserRole(token);
             if (username != null) {
                 return new UsernamePasswordAuthenticationToken(username, null,
                         Collections.singleton(new SimpleGrantedAuthority(role))

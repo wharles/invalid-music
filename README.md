@@ -36,8 +36,8 @@ git clone https://github.com/charles-wxg/invalid-music.git
 
 ## 环境
 
-- 运行环境: JDK 11+    
-- 开发环境: Intellij IDEA 2019
+- 运行环境: JDK 15+    
+- 开发环境: Intellij IDEA 2020.2
 
 ## 相关项目
 

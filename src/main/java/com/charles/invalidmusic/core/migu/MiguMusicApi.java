@@ -45,7 +45,7 @@ public class MiguMusicApi extends MusicApi {
 
     @Override
     public PageList<SearchItem> search(String keyword, int limit, int page, int type) {
-        String url = "http://m.music.migu.cn/migu/remoting/scr_search_tag";
+        var url = "http://m.music.migu.cn/migu/remoting/scr_search_tag";
         var params = Map.of(
                 "type", "2",
                 "keyword", keyword,
@@ -76,11 +76,11 @@ public class MiguMusicApi extends MusicApi {
             var content = httpClientService.get(url, params);
             var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                UrlInfo urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                 urlInfo.setId(songId);
                 urlInfo.setBitrate(quality.getBitrate());
 
-                Song song = mapper.treeToValue(resultModel.at("/data/songItem"), Song.class);
+                var song = mapper.treeToValue(resultModel.at("/data/songItem"), Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
             }
@@ -151,7 +151,7 @@ public class MiguMusicApi extends MusicApi {
             try {
                 var resultModel = checkAndGetJson(content);
                 if (resultModel != null) {
-                    UrlInfo urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                    var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                     urlInfo.setId(resultModel.at("/data/songItem/songId").asText());
                     urlInfo.setBitrate(quality.getBitrate());
                     return urlInfo;
@@ -175,9 +175,9 @@ public class MiguMusicApi extends MusicApi {
             var content = httpClientService.get(url, params);
             var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                String lycUrl = resultModel.at("/data/songItem/lrcUrl").asText();
-                String s = httpClientService.get(lycUrl);
-                Lyric lyric = new Lyric();
+                var lycUrl = resultModel.at("/data/songItem/lrcUrl").asText();
+                var s = httpClientService.get(lycUrl);
+                var lyric = new Lyric();
                 lyric.setContent(s);
                 return lyric;
             }

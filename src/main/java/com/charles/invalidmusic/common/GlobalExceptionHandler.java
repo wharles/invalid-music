@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorInfo jsonErrorHandler(HttpServletRequest req, BaseException e) throws Exception {
-        ErrorInfo r = new ErrorInfo();
+        var r = new ErrorInfo();
         r.setErrorMessage(e.getMessage());
         r.setErrorCode(ErrorInfo.ERROR);
         return r;

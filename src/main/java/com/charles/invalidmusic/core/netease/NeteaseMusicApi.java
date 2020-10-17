@@ -44,8 +44,8 @@ public class NeteaseMusicApi extends MusicApi {
 
     @Override
     public PageList<SearchItem> search(String keyword, int limit, int page, int type) {
-        String url = "https://music.163.com/weapi/v1/search/get?csrf_token=";
-        ObjectNode rootNode = mapper.createObjectNode();
+        var url = "https://music.163.com/weapi/v1/search/get?csrf_token=";
+        var rootNode = mapper.createObjectNode();
         rootNode.put("s", keyword)
                 .put("type", type)
                 .put("limit", limit)
@@ -53,7 +53,7 @@ public class NeteaseMusicApi extends MusicApi {
                 .put("offset", (page - 1) * limit)
                 .put("csrf_token", "");
         try {
-            JsonNode resultModel = requestJson(url, rootNode);
+            var resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
                 return getSearchItemPageList(limit, page, resultModel, "/result/songCount", "/result/songs");
             }
@@ -65,14 +65,14 @@ public class NeteaseMusicApi extends MusicApi {
 
     @Override
     public Song getSongById(String songId, Quality quality) {
-        String url = "https://music.163.com/weapi/v3/song/detail?csrf_token=";
-        ObjectNode rootNode = mapper.createObjectNode();
+        var url = "https://music.163.com/weapi/v3/song/detail?csrf_token=";
+        var rootNode = mapper.createObjectNode();
         rootNode.put("c", "[{\"id\":" + songId + "}]").put("csrf_token", "");
         try {
-            JsonNode resultModel = requestJson(url, rootNode);
+            var resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                UrlInfo urlInfo = getUrlById(quality, songId).get(0);
-                Song song = mapper.treeToValue(resultModel.at("/songs/0"), Song.class);
+                var urlInfo = getUrlById(quality, songId).get(0);
+                var song = mapper.treeToValue(resultModel.at("/songs/0"), Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
             }
@@ -84,13 +84,13 @@ public class NeteaseMusicApi extends MusicApi {
 
     @Override
     public Playlist getPlaylistById(String playlistId) {
-        String url = "https://music.163.com/weapi/v3/playlist/detail?csrf_token=";
-        ObjectNode rootNode = mapper.createObjectNode();
+        var url = "https://music.163.com/weapi/v3/playlist/detail?csrf_token=";
+        var rootNode = mapper.createObjectNode();
         rootNode.put("id", playlistId)
                 .put("n", 1000)
                 .put("csrf_token", "");
         try {
-            JsonNode resultModel = requestJson(url, rootNode);
+            var resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
                 return mapper.treeToValue(resultModel.path("playlist"), Playlist.class);
             }
@@ -103,15 +103,15 @@ public class NeteaseMusicApi extends MusicApi {
     @Override
     public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         try {
-            String url = "https://music.163.com/weapi/song/enhance/player/url?csrf_token=";
-            ObjectNode rootNode = mapper.createObjectNode();
+            var url = "https://music.163.com/weapi/song/enhance/player/url?csrf_token=";
+            var rootNode = mapper.createObjectNode();
             rootNode.put("ids", Arrays.toString(songIds))
                     .put("br", quality.getBitrate())
                     .put("csrf_token", "");
-            JsonNode resultModel = requestJson(url, rootNode);
+            var resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
-                List<UrlInfo> urlInfos = new ArrayList<>();
-                for (int i = 0; i < songIds.length; i++) {
+                var urlInfos = new ArrayList<UrlInfo>();
+                for (var i = 0; i < songIds.length; i++) {
                     urlInfos.add(mapper.treeToValue(resultModel.at("/data/" + i), UrlInfo.class));
                 }
                 return urlInfos;
@@ -125,15 +125,15 @@ public class NeteaseMusicApi extends MusicApi {
     @Override
     public Lyric getLyricById(String songId) {
         try {
-            String url = "https://music.163.com/weapi/song/lyric?csrf_token=";
-            ObjectNode rootNode = mapper.createObjectNode();
+            var url = "https://music.163.com/weapi/song/lyric?csrf_token=";
+            var rootNode = mapper.createObjectNode();
             rootNode.put("id", songId)
                     .put("os", "pc")
                     .put("lv", -1)
                     .put("kv", -1)
                     .put("tv", -1)
                     .put("csrf_token", "");
-            JsonNode resultModel = requestJson(url, rootNode);
+            var resultModel = requestJson(url, rootNode);
             if (resultModel != null) {
                 return mapper.treeToValue(resultModel, Lyric.class);
             }
@@ -144,12 +144,12 @@ public class NeteaseMusicApi extends MusicApi {
     }
 
     private JsonNode requestJson(String url, ObjectNode objectNode) throws IOException, GeneralSecurityException, InterruptedException {
-        String params = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
-        String content = httpClientService.postForm(url, params);
+        var params = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(objectNode);
+        var content = httpClientService.postForm(url, params);
         if (StringUtils.isEmpty(content)) {
             return null;
         }
-        JsonNode resultModel = mapper.readTree(content);
+        var resultModel = mapper.readTree(content);
         if (resultModel == null || resultModel.path("code").asInt() != 200) {
             return null;
         }

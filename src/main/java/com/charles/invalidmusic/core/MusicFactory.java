@@ -20,13 +20,13 @@ public class MusicFactory {
 
     @Autowired
     public MusicFactory(List<MusicApi> services) {
-        for (MusicApi service : services) {
+        for (var service : services) {
             serviceCache.put(service.getPlatform(), service);
         }
     }
 
     public static MusicApi factory(Platform platform) {
-        MusicApi service = serviceCache.get(platform);
+        var service = serviceCache.get(platform);
         if (service == null) {
             throw new RuntimeException("Unknown platform service: " + platform);
         }

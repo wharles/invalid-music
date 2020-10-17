@@ -45,7 +45,7 @@ public class TencentMusicApi extends MusicApi {
 
     @Override
     public PageList<SearchItem> search(String keyword, int limit, int page, int type) {
-        String url = "https://c.y.qq.com/soso/fcgi-bin/client_search_cp";
+        var url = "https://c.y.qq.com/soso/fcgi-bin/client_search_cp";
         var params = Map.of(
                 "format", "json",
                 "type", String.valueOf(type),
@@ -58,8 +58,8 @@ public class TencentMusicApi extends MusicApi {
                 "aggr", "1"
         );
         try {
-            String content = httpClientService.get(url, params);
-            JsonNode resultModel = checkAndGetJson(content);
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return getSearchItemPageList(limit, page, resultModel, "/data/song/totalnum", "/data/song/list");
             }
@@ -71,20 +71,20 @@ public class TencentMusicApi extends MusicApi {
 
     @Override
     public Song getSongById(String songId, Quality quality) {
-        String url = "https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg";
+        var url = "https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg";
         var params = Map.of(
                 "songmid", String.valueOf(songId),
                 "platform", "yqq",
                 "format", "json"
         );
         try {
-            String content = httpClientService.get(url, params);
-            JsonNode resultModel = checkAndGetJson(content);
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
-                JsonNode songNode = resultModel.path("data").get(0);
-                UrlInfo urlInfo = getUrlById(quality, songId).get(0);
+                var songNode = resultModel.path("data").get(0);
+                var urlInfo = getUrlById(quality, songId).get(0);
                 setFileSize(urlInfo, songNode);
-                Song song = mapper.treeToValue(songNode, Song.class);
+                var song = mapper.treeToValue(songNode, Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
             }
@@ -96,7 +96,7 @@ public class TencentMusicApi extends MusicApi {
 
     @Override
     public Playlist getPlaylistById(String playlistId) {
-        String url = "https://c.y.qq.com/v8/fcg-bin/fcg_v8_playlist_cp.fcg";
+        var url = "https://c.y.qq.com/v8/fcg-bin/fcg_v8_playlist_cp.fcg";
         var params = Map.of(
                 "id", playlistId,
                 "platform", "jqspaframe.json",
@@ -104,8 +104,8 @@ public class TencentMusicApi extends MusicApi {
                 "newsong", "1"
         );
         try {
-            String content = httpClientService.get(url, params);
-            JsonNode resultModel = checkAndGetJson(content);
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return mapper.treeToValue(resultModel.at("/data/cdlist/0"), Playlist.class);
             }
@@ -118,8 +118,8 @@ public class TencentMusicApi extends MusicApi {
     @Override
     public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         try {
-            String url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
-            String dataJson = getDataJson(songIds);
+            var url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
+            var dataJson = getDataJson(songIds);
 
             var params = Map.of(
                     "platform", "yqq.json",
@@ -127,8 +127,8 @@ public class TencentMusicApi extends MusicApi {
                     "needNewCode", "0",
                     "data", dataJson
             );
-            String content = httpClientService.get(url, params);
-            JsonNode resultModel = checkAndGetJson(content);
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return getUrlInfos(quality.getBitrate(), resultModel.at("/req_0/data"));
             }
@@ -140,12 +140,12 @@ public class TencentMusicApi extends MusicApi {
 
     public List<UrlInfo> getUrlInfos(int bitrate, JsonNode dataNode) {
         var infoNodes = dataNode.path("midurlinfo");
-        List<UrlInfo> urlInfos = new ArrayList<>();
+        var urlInfos = new ArrayList<UrlInfo>();
         for (var infoNode : infoNodes) {
             var sip = dataNode.path("sip").get(0).asText();
             var purl = infoNode.path("purl").asText();
 
-            UrlInfo urlInfo = new UrlInfo();
+            var urlInfo = new UrlInfo();
             urlInfo.setUrl(sip + purl);
             urlInfo.setId(infoNode.path("songmid").asText());
             urlInfo.setBitrate(bitrate);
@@ -157,15 +157,15 @@ public class TencentMusicApi extends MusicApi {
 
     @Override
     public Lyric getLyricById(String songId) {
-        String url = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg";
+        var url = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg";
         var params = Map.of(
                 "songmid", String.valueOf(songId),
                 "g_tk", "5381",
                 "format", "json"
         );
         try {
-            String content = httpClientService.get(url, params);
-            JsonNode resultModel = checkAndGetJson(content);
+            var content = httpClientService.get(url, params);
+            var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 return mapper.treeToValue(resultModel, Lyric.class);
             }
@@ -179,7 +179,7 @@ public class TencentMusicApi extends MusicApi {
         if (StringUtils.isEmpty(json)) {
             return null;
         }
-        JsonNode resultModel = mapper.readTree(json);
+        var resultModel = mapper.readTree(json);
         if (resultModel == null || resultModel.path("code").asInt() != 0) {
             return null;
         }
@@ -188,25 +188,25 @@ public class TencentMusicApi extends MusicApi {
 
     private String getDataJson(String[] songIds) throws JsonProcessingException {
 
-        ObjectNode paramNode = mapper.createObjectNode();
+        var paramNode = mapper.createObjectNode();
         paramNode.put("guid", "358840384")
                 .put("uin", "1443481947")
                 .put("loginflag", 1)
                 .put("platform", "20");
 
-        for (String mid : songIds) {
+        for (var mid : songIds) {
             paramNode.set("songmid", mapper.createArrayNode().add(mid));
             paramNode.set("songtype", mapper.createArrayNode().add(0));
         }
 
-        ObjectNode reqNode = mapper.createObjectNode();
+        var reqNode = mapper.createObjectNode();
         reqNode.put("module", "vkey.GetVkeyServer")
                 .put("method", "CgiGetVkey")
                 .set("param", paramNode);
-        ObjectNode rootNode = mapper.createObjectNode();
+        var rootNode = mapper.createObjectNode();
         rootNode.set("req_0", reqNode);
 
-        ObjectNode commonNode = mapper.createObjectNode();
+        var commonNode = mapper.createObjectNode();
         commonNode.put("uin", "1443481947");
         commonNode.put("format", "json");
         commonNode.put("ct", 24);
@@ -217,8 +217,8 @@ public class TencentMusicApi extends MusicApi {
     }
 
     private void setFileSize(UrlInfo urlInfo, JsonNode songNode) {
-        String bitStr = urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('/') + 1, urlInfo.getUrl().lastIndexOf('/') + 5);
-        String sizePath = bitMap.get(bitStr);
+        var bitStr = urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('/') + 1, urlInfo.getUrl().lastIndexOf('/') + 5);
+        var sizePath = bitMap.get(bitStr);
         urlInfo.setSize(songNode.path("file").path(sizePath).asLong());
         urlInfo.setBitrate(Integer.parseInt(sizePath.substring(sizePath.indexOf('_') + 1, sizePath.length() - 3)) * 1000);
     }

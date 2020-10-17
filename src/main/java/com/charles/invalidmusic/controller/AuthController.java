@@ -54,7 +54,7 @@ public class AuthController {
     @ResponseBody
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public Response<User> register(@RequestBody @ApiParam(name = "user", value = "注册用户对象json", required = true) User user) throws BaseException {
-        User resultUser = userService.registerUser(user);
+        var resultUser = userService.registerUser(user);
         return new Response<>(resultUser);
     }
 
@@ -62,17 +62,17 @@ public class AuthController {
     @ResponseBody
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     public Response<Map.Entry<String, String>> login(@RequestBody @ApiParam(name = "userDto", value = "用户对象json", required = true) UserDto userDto) throws BaseException {
-        Authentication authentication = authenticate(userDto.getUsername(), userDto.getPassword());
-        JwtUser jwtUser = (JwtUser) authentication.getPrincipal();
+        var authentication = authenticate(userDto.getUsername(), userDto.getPassword());
+        var jwtUser = (JwtUser) authentication.getPrincipal();
         LOGGER.info("jwtUser: {}", jwtUser.toString());
 
-        String role = "";
-        Collection<? extends GrantedAuthority> authorities = jwtUser.getAuthorities();
-        for (GrantedAuthority authority : authorities) {
+        var role = "";
+        var authorities = jwtUser.getAuthorities();
+        for (var authority : authorities) {
             role = authority.getAuthority();
         }
 
-        String token = JwtTokenUtil.createToken(jwtUser.getUsername(), role);
+        var token = JwtTokenUtil.createToken(jwtUser.getUsername(), role);
         return new Response<>(new AbstractMap.SimpleEntry<>("token", JwtTokenUtil.TOKEN_PREFIX + token));
     }
 

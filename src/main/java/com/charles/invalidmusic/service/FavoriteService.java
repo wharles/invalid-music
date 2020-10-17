@@ -65,7 +65,7 @@ public class FavoriteService {
 
     public List<Song> getFavoriteSong(String username) {
         var user = userMapper.findByUsername(username);
-        List<Favorite> favorites = favoriteMapper.getFavoriteSong(user.getId());
+        var favorites = favoriteMapper.getFavoriteSong(user.getId());
         if (favorites != null) {
             return favorites.stream().map(favorite -> {
                 try {

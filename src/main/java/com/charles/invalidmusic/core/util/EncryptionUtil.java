@@ -35,14 +35,14 @@ public final class EncryptionUtil {
      */
     public static String encrypt(String sSrc, String sKey, String sIV) throws GeneralSecurityException {
 
-        byte[] raw = sKey.getBytes(StandardCharsets.UTF_8);
-        SecretKeySpec sKeySpec = new SecretKeySpec(raw, "AES");
+        var raw = sKey.getBytes(StandardCharsets.UTF_8);
+        var sKeySpec = new SecretKeySpec(raw, "AES");
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        IvParameterSpec iv = new IvParameterSpec(sIV.getBytes());
+        var cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        var iv = new IvParameterSpec(sIV.getBytes());
 
         cipher.init(Cipher.ENCRYPT_MODE, sKeySpec, iv);
-        byte[] encrypted = cipher.doFinal(sSrc.getBytes());
+        var encrypted = cipher.doFinal(sSrc.getBytes());
 
         return new String(Base64.encodeBase64(encrypted));
     }
@@ -63,10 +63,10 @@ public final class EncryptionUtil {
 
     public static String generateMD5(String input) {
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
+            var md = MessageDigest.getInstance("MD5");
             byte[] messageDigest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            BigInteger no = new BigInteger(1, messageDigest);
-            StringBuilder hashText = new StringBuilder(no.toString(16));
+            var no = new BigInteger(1, messageDigest);
+            var hashText = new StringBuilder(no.toString(16));
             while (hashText.length() < 32) {
                 hashText.insert(0, "0");
             }
