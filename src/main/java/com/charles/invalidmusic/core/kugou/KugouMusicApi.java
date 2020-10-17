@@ -66,10 +66,9 @@ public class KugouMusicApi extends MusicApi {
 
     @Override
     public Song getSongById(String songId, Quality quality) {
-        var url = "https://wwwapi.kugou.com/yy/index.php";
-        var params = Map.of("hash", songId, "r", "play/getdata");
+        var url = "https://wwwapi.kugou.com/yy/index.php?r=play%2Fgetdata&hash=" + songId;
         try {
-            var content = httpClientService.get(url, params);
+            var content = httpClientService.get(url);
             var resultModel = checkAndGetJson(content, "err_code");
             if (resultModel != null) {
                 UrlInfo urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
@@ -117,13 +116,15 @@ public class KugouMusicApi extends MusicApi {
     public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         var url = "https://wwwapi.kugou.com/yy/index.php";
 
-        var paramsList = Stream.of(songIds).map(songId -> Map.of("hash", songId, "r", "play/getdata")).collect(Collectors.toList());
+        var paramsList = Stream.of(songIds).map(songId -> Map.of("r=play/getdata&hash", songId)).collect(Collectors.toList());
         var contents = httpClientService.getRequests(url, paramsList);
         return contents.stream().map(content -> {
             try {
                 var resultModel = checkAndGetJson(content, "err_code");
                 if (resultModel != null) {
-                    return mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                    var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                    urlInfo.setBitrate(urlInfo.getBitrate() * 1000);
+                    return urlInfo;
                 }
             } catch (IOException e) {
                 LOGGER.error("get song by id failed, reason:", e);
@@ -134,10 +135,9 @@ public class KugouMusicApi extends MusicApi {
 
     @Override
     public Lyric getLyricById(String songId) {
-        var url = "https://wwwapi.kugou.com/yy/index.php";
-        var params = Map.of("hash", songId, "r", "play/getdata");
+        var url = "https://wwwapi.kugou.com/yy/index.php?r=play%2Fgetdata&hash=" + songId;
         try {
-            var content = httpClientService.get(url, params);
+            var content = httpClientService.get(url);
             var resultModel = checkAndGetJson(content, "err_code");
             if (resultModel != null) {
                 Lyric lyric = new Lyric();
