@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Component
 public class XiamiMusicApi extends MusicApi {
@@ -76,8 +76,12 @@ public class XiamiMusicApi extends MusicApi {
             var resultModel = checkAndGetJson(content);
             if (resultModel != null) {
                 var listenFilesNode = resultModel.at("/data/data/songDetail/listenFiles");
-                int index = getIndex(quality, listenFilesNode);
-                var urlInfo = mapper.treeToValue(listenFilesNode.get(index), UrlInfo.class);
+                var listenFileNode = getListenFileNode(quality, listenFilesNode);
+                if (listenFileNode == null) {
+                    LOGGER.error("listen files is empty.");
+                    return null;
+                }
+                var urlInfo = mapper.treeToValue(listenFileNode, UrlInfo.class);
                 urlInfo.setId(songId);
                 urlInfo.setBitrate(quality.getBitrate());
 
@@ -91,11 +95,15 @@ public class XiamiMusicApi extends MusicApi {
         return null;
     }
 
-    private int getIndex(Quality quality, JsonNode listenFilesNode) {
-        return IntStream.range(0, listenFilesNode.size())
-                .filter(i -> quality.getName().substring(0, 1).equalsIgnoreCase(listenFilesNode.get(i).path("quality").asText()))
-                .findAny()
-                .orElse(0);
+    private JsonNode getListenFileNode(Quality quality, JsonNode listenFilesNode) {
+        if (listenFilesNode != null && listenFilesNode.size() > 0) {
+            return StreamSupport.stream(listenFilesNode.spliterator(), false).filter(file -> switch (quality) {
+                case SQ -> "s".equals(file.path("quality").asText());
+                case HQ -> "h".equals(file.path("quality").asText());
+                case PQ -> "l".equals(file.path("quality").asText());
+            }).findAny().orElse(listenFilesNode.get(0));
+        }
+        return null;
     }
 
     @Override
@@ -144,8 +152,12 @@ public class XiamiMusicApi extends MusicApi {
                 var resultModel = checkAndGetJson(content);
                 if (resultModel != null) {
                     var listenFilesNode = resultModel.at("/data/data/songDetail/listenFiles");
-                    var index = getIndex(quality, listenFilesNode);
-                    var urlInfo = mapper.treeToValue(listenFilesNode.get(index), UrlInfo.class);
+                    var listenFileNode = getListenFileNode(quality, listenFilesNode);
+                    if (listenFileNode == null) {
+                        LOGGER.error("listen files is empty.");
+                        return null;
+                    }
+                    var urlInfo = mapper.treeToValue(listenFileNode, UrlInfo.class);
                     urlInfo.setId(resultModel.at("/data/data/songDetail/songId").asText());
                     urlInfo.setBitrate(quality.getBitrate());
                     return urlInfo;

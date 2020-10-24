@@ -23,6 +23,9 @@ public class UrlInfo {
     @JsonAlias({"size", "filesize", "filesize"})
     private Long size;
 
+    @JsonAlias({"type", "format"})
+    private String format;
+
     public UrlInfo() {
     }
 }

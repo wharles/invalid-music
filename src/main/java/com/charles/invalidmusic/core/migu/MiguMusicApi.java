@@ -79,6 +79,7 @@ public class MiguMusicApi extends MusicApi {
                 var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                 urlInfo.setId(songId);
                 urlInfo.setBitrate(quality.getBitrate());
+                urlInfo.setFormat(urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('.') + 1, urlInfo.getUrl().indexOf('?')));
 
                 var song = mapper.treeToValue(resultModel.at("/data/songItem"), Song.class);
                 song.setUrlInfo(urlInfo);
@@ -154,6 +155,7 @@ public class MiguMusicApi extends MusicApi {
                     var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                     urlInfo.setId(resultModel.at("/data/songItem/songId").asText());
                     urlInfo.setBitrate(quality.getBitrate());
+                    urlInfo.setFormat(urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('.') + 1, urlInfo.getUrl().indexOf('?')));
                     return urlInfo;
                 }
             } catch (IOException e) {

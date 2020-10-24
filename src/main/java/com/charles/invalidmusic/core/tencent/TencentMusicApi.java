@@ -144,11 +144,13 @@ public class TencentMusicApi extends MusicApi {
         for (var infoNode : infoNodes) {
             var sip = dataNode.path("sip").get(0).asText();
             var purl = infoNode.path("purl").asText();
+            var fileName = infoNode.path("filename").asText();
 
             var urlInfo = new UrlInfo();
             urlInfo.setUrl(sip + purl);
             urlInfo.setId(infoNode.path("songmid").asText());
             urlInfo.setBitrate(bitrate);
+            urlInfo.setFormat(fileName.substring(fileName.lastIndexOf('.') + 1));
 
             urlInfos.add(urlInfo);
         }

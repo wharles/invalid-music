@@ -72,6 +72,8 @@ public class KugouMusicApi extends MusicApi {
             var resultModel = checkAndGetJson(content, "err_code");
             if (resultModel != null) {
                 var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
+                urlInfo.setBitrate(urlInfo.getBitrate() * 1000);
+                urlInfo.setFormat(urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('.') + 1));
                 var song = mapper.treeToValue(resultModel.at("/data"), Song.class);
                 song.setUrlInfo(urlInfo);
                 return song;
@@ -124,6 +126,7 @@ public class KugouMusicApi extends MusicApi {
                 if (resultModel != null) {
                     var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                     urlInfo.setBitrate(urlInfo.getBitrate() * 1000);
+                    urlInfo.setFormat(urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('.') + 1));
                     return urlInfo;
                 }
             } catch (IOException e) {
