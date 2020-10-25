@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,7 +71,7 @@ public class MiguMusicApi extends MusicApi {
         var params = Map.of("songId", songId,
                 "netType", "01",
                 "resourceType", "E",
-                "toneFlag", "SQ",
+                "toneFlag", quality.getName(),
                 "dataType", "2");
         try {
             var content = httpClientService.get(url, params);
@@ -79,7 +80,7 @@ public class MiguMusicApi extends MusicApi {
                 var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                 urlInfo.setId(songId);
                 urlInfo.setBitrate(quality.getBitrate());
-                urlInfo.setFormat(urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('.') + 1, urlInfo.getUrl().indexOf('?')));
+                Optional.ofNullable(urlInfo.getUrl()).ifPresent(u -> urlInfo.setFormat(u.substring(u.lastIndexOf('.') + 1, u.indexOf('?'))));
 
                 var song = mapper.treeToValue(resultModel.at("/data/songItem"), Song.class);
                 song.setUrlInfo(urlInfo);
@@ -155,7 +156,7 @@ public class MiguMusicApi extends MusicApi {
                     var urlInfo = mapper.treeToValue(resultModel.at("/data"), UrlInfo.class);
                     urlInfo.setId(resultModel.at("/data/songItem/songId").asText());
                     urlInfo.setBitrate(quality.getBitrate());
-                    urlInfo.setFormat(urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('.') + 1, urlInfo.getUrl().indexOf('?')));
+                    Optional.ofNullable(urlInfo.getUrl()).ifPresent(u -> urlInfo.setFormat(u.substring(u.lastIndexOf('.') + 1, u.indexOf('?'))));
                     return urlInfo;
                 }
             } catch (IOException e) {

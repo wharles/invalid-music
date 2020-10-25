@@ -1,13 +1,12 @@
 package com.charles.invalidmusic.core.tencent;
 
 import com.charles.invalidmusic.core.MusicApi;
+import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.Quality;
 import com.charles.invalidmusic.core.base.HttpClientService;
-import com.charles.invalidmusic.core.Platform;
 import com.charles.invalidmusic.core.model.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,7 +118,7 @@ public class TencentMusicApi extends MusicApi {
     public List<UrlInfo> getUrlById(Quality quality, String... songIds) {
         try {
             var url = "https://u.y.qq.com/cgi-bin/musicu.fcg";
-            var dataJson = getDataJson(songIds);
+            var dataJson = getDataJson(quality, songIds);
 
             var params = Map.of(
                     "platform", "yqq.json",
@@ -188,40 +187,50 @@ public class TencentMusicApi extends MusicApi {
         return resultModel;
     }
 
-    private String getDataJson(String[] songIds) throws JsonProcessingException {
-
-        var paramNode = mapper.createObjectNode();
-        paramNode.put("guid", "358840384")
-                .put("uin", "1443481947")
-                .put("loginflag", 1)
-                .put("platform", "20");
-
+    private String getDataJson(Quality quality, String[] songIds) throws JsonProcessingException {
+        var ts = String.valueOf(System.currentTimeMillis() / 1000);
+        var bit = quality.getBitrate() / 1000;
+        var fileNames = new ArrayList<String>();
         for (var mid : songIds) {
-            paramNode.set("songmid", mapper.createArrayNode().add(mid));
-            paramNode.set("songtype", mapper.createArrayNode().add(0));
+            for (var entry : bitMap.entrySet()) {
+                if (entry.getValue().contains(String.valueOf(bit))) {
+                    var v = entry.getValue().substring(entry.getValue().length() - 3);
+                    v = "aac".equals(v) ? "m4a" : v;
+                    var fileName = entry.getKey() + mid + "." + v;
+                    fileNames.add(fileName);
+                    break;
+                }
+            }
         }
+        fileNames.sort(Collections.reverseOrder());
 
-        var reqNode = mapper.createObjectNode();
-        reqNode.put("module", "vkey.GetVkeyServer")
-                .put("method", "CgiGetVkey")
-                .set("param", paramNode);
-        var rootNode = mapper.createObjectNode();
-        rootNode.set("req_0", reqNode);
+        var rootMap = Map.of(
+                "req_0", Map.of(
+                        "module", "vkey.GetVkeyServer",
+                        "method", "CgiGetVkey",
+                        "param", Map.of(
+                                "guid", String.valueOf(new Random().nextInt(Integer.MAX_VALUE)),
+                                "uin", ts,
+                                "loginflag", 1,
+                                "platform", "20",
+                                "songmid", songIds,
+                                "filename", fileNames,
+                                "songtype", new int[]{0})),
+                "common", Map.of(
+                        "uin", ts,
+                        "format", "json",
+                        "ct", bit,
+                        "cv", 0));
 
-        var commonNode = mapper.createObjectNode();
-        commonNode.put("uin", "1443481947");
-        commonNode.put("format", "json");
-        commonNode.put("ct", 24);
-        commonNode.put("cv", 0);
-        rootNode.set("common", commonNode);
-
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
+        return mapper.writeValueAsString(rootMap);
     }
 
     private void setFileSize(UrlInfo urlInfo, JsonNode songNode) {
-        var bitStr = urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('/') + 1, urlInfo.getUrl().lastIndexOf('/') + 5);
-        var sizePath = bitMap.get(bitStr);
-        urlInfo.setSize(songNode.path("file").path(sizePath).asLong());
-        urlInfo.setBitrate(Integer.parseInt(sizePath.substring(sizePath.indexOf('_') + 1, sizePath.length() - 3)) * 1000);
+        if (urlInfo.getUrl() != null && urlInfo.getUrl().lastIndexOf('/') != urlInfo.getUrl().length() - 1) {
+            var bitStr = urlInfo.getUrl().substring(urlInfo.getUrl().lastIndexOf('/') + 1, urlInfo.getUrl().lastIndexOf('/') + 5);
+            var sizePath = bitMap.get(bitStr);
+            urlInfo.setSize(songNode.path("file").path(sizePath).asLong());
+            urlInfo.setBitrate(Integer.parseInt(sizePath.substring(sizePath.indexOf('_') + 1, sizePath.length() - 3)) * 1000);
+        }
     }
 }
